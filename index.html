@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>永久機関シミュレーション</title>
+    <!-- Google Fonts - Robotoの読み込み -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* グローバル設定とライトテーマのデフォルト */
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0; /* ライトテーマの背景色 */
+            color: #333; /* ライトテーマの文字色 */
+            transition: background-color 0.3s ease, color 0.3s ease; /* テーマ切り替え時の滑らかな変化 */
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            max-width: 600px;
+            width: 90%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #333; /* ライトテーマの文字色 */
+            transition: color 0.3s ease;
+        }
+
+        p#status-text {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #666; /* ライトテーマの文字色 */
+            transition: color 0.3s ease;
+        }
+
+        .simulation-area {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border: 2px solid #ccc; /* ライトテーマの枠線色 */
+            border-radius: 15px;
+            background-color: #fff; /* ライトテーマのシミュレーション領域背景 */
+            margin: 0 auto;
+            overflow: hidden; /* 回転する要素がはみ出さないように */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pivot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background-color: #555; /* ライトテーマのピボット色 */
+            border-radius: 50%;
+            z-index: 2; /* アームより手前に表示 */
+            transition: background-color 0.3s ease;
+        }
+
+        .arm {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0% 0%; /* 左上を基準に回転 */
+            width: 120px; /* アームの長さ */
+            height: 10px; /* アームの太さ */
+            background-color: #888; /* ライトテーマのアーム色 */
+            border-radius: 5px;
+            z-index: 1; /* ピボットより奥に表示 */
+            transform: rotate(0deg); /* 初期角度 */
+            animation: spin 3s linear infinite; /* 永久回転アニメーション */
+            transition: background-color 0.3s ease;
+        }
+
+        .weight {
+            position: absolute;
+            top: 50%; /* アームの中央に配置 */
+            left: 100%; /* アームの先端に配置 */
+            transform: translate(-50%, -50%); /* 中央揃え */
+            width: 30px;
+            height: 30px;
+            background-color: #ff6347; /* ライトテーマのおもり色 (トマト) */
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* 永久回転アニメーション */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ダークテーマのスタイル設定 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #222; /* ダークテーマの背景色 */
+                color: #eee; /* ダークテーマの文字色 */
+            }
+
+            h1 {
+                color: #eee; /* ダークテーマの文字色 */
+            }
+
+            p#status-text {
+                color: #bbb; /* ダークテーマの文字色 */
+            }
+
+            .simulation-area {
+                border: 2px solid #555; /* ダークテーマの枠線色 */
+                background-color: #333; /* ダークテーマのシミュレーション領域背景 */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            }
+
+            .pivot {
+                background-color: #bbb; /* ダークテーマのピボット色 */
+            }
+
+            .arm {
+                background-color: #666; /* ダークテーマのアーム色 */
+            }
+
+            .weight {
+                background-color: #1e90ff; /* ダークテーマのおもり色 (ドジャーブルー) */
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>永久機関シミュレーション</h1>
+        <p id="status-text">無限の動きを観察中...</p>
+        <div class="simulation-area">
+            <div class="pivot"></div>
+            <div class="arm">
+                <div class="weight"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScriptは今回の「永久機関」の動き自体には直接関与しません。
+        // CSSアニメーションが無限の動きを処理し、CSSメディアクエリがテーマを自動で変更します。
+        // ここでは、ページの読み込みが完了したことを確認する簡単なログを出力します。
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('永久機関シミュレーションが読み込まれました。');
+            console.log('動きはCSSアニメーションによって制御されています。');
+            console.log('テーマはデバイスの設定に合わせて自動的に切り替わります。');
+
+            // JavaScriptでテーマを検出して何かをしたい場合、以下のようになりますが、
+            // 今回のCSSメディアクエリでの実装では不要です。
+            /*
+            const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+            function applyTheme() {
+                if (prefersDarkScheme.matches) {
+                    document.body.classList.add('dark-theme');
+                    document.body.classList.remove('light-theme');
+                } else {
+                    document.body.classList.add('light-theme');
+                    document.body.classList.remove('dark-theme');
+                }
+            }
+
+            // 初期ロード時
+            applyTheme();
+
+            // テーマ設定の変更を監視
+            prefersDarkScheme.addEventListener("change", applyTheme);
+            */
+        });
+    </script>
+</body>
+</html>
