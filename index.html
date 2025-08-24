@@ -3,11 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>永久機関シミュレーション</title>
+    <title>永久機関シミュレーション (高画質版)</title>
     <!-- Google Fonts - Robotoの読み込み -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- p5.jsライブラリをインポート -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.1/p5.min.js"></script>
     <style>
-        /* グローバル設定とライトテーマのデフォルト */
+        /* CSSカスタムプロパティ (ライトテーマのデフォルト) */
+        :root {
+            --bg-color: #f0f0f0;
+            --text-color: #333;
+            --secondary-text-color: #666;
+            --simulation-bg-color: #fff;
+            --border-color: #ccc;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --pivot-color: #555;
+            --arm-color: #888;
+            --weight-color: #ff6347; /* トマト */
+        }
+
+        /* ダークテーマのスタイル設定 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #222;
+                --text-color: #eee;
+                --secondary-text-color: #bbb;
+                --simulation-bg-color: #333;
+                --border-color: #555;
+                --shadow-color: rgba(0, 0, 0, 0.3);
+                --pivot-color: #bbb;
+                --arm-color: #666;
+                --weight-color: #1e90ff; /* ドジャーブルー */
+            }
+        }
+
+        /* グローバル設定 */
         body {
             font-family: 'Roboto', sans-serif;
             display: flex;
@@ -16,9 +46,9 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f0f0f0; /* ライトテーマの背景色 */
-            color: #333; /* ライトテーマの文字色 */
-            transition: background-color 0.3s ease, color 0.3s ease; /* テーマ切り替え時の滑らかな変化 */
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -32,114 +62,33 @@
         h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
-            color: #333; /* ライトテーマの文字色 */
+            color: var(--text-color);
             transition: color 0.3s ease;
         }
 
         p#status-text {
             font-size: 1.1em;
             margin-bottom: 30px;
-            color: #666; /* ライトテーマの文字色 */
+            color: var(--secondary-text-color);
             transition: color 0.3s ease;
         }
 
-        .simulation-area {
-            position: relative;
+        /* p5.jsが生成するcanvasを配置するコンテナ */
+        #simulation-container {
             width: 300px;
             height: 300px;
-            border: 2px solid #ccc; /* ライトテーマの枠線色 */
+            border: 2px solid var(--border-color);
             border-radius: 15px;
-            background-color: #fff; /* ライトテーマのシミュレーション領域背景 */
+            background-color: var(--simulation-bg-color); /* 背景色はp5.jsでも描画するが、念のため設定 */
             margin: 0 auto;
-            overflow: hidden; /* 回転する要素がはみ出さないように */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* canvasの角を丸めるため */
+            box-shadow: 0 4px 8px var(--shadow-color);
             transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .pivot {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            background-color: #555; /* ライトテーマのピボット色 */
-            border-radius: 50%;
-            z-index: 2; /* アームより手前に表示 */
-            transition: background-color 0.3s ease;
-        }
-
-        .arm {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform-origin: 0% 0%; /* 左上を基準に回転 */
-            width: 120px; /* アームの長さ */
-            height: 10px; /* アームの太さ */
-            background-color: #888; /* ライトテーマのアーム色 */
-            border-radius: 5px;
-            z-index: 1; /* ピボットより奥に表示 */
-            transform: rotate(0deg); /* 初期角度 */
-            animation: spin 3s linear infinite; /* 永久回転アニメーション */
-            transition: background-color 0.3s ease;
-        }
-
-        .weight {
-            position: absolute;
-            top: 50%; /* アームの中央に配置 */
-            left: 100%; /* アームの先端に配置 */
-            transform: translate(-50%, -50%); /* 中央揃え */
-            width: 30px;
-            height: 30px;
-            background-color: #ff6347; /* ライトテーマのおもり色 (トマト) */
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        /* 永久回転アニメーション */
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* ダークテーマのスタイル設定 */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #222; /* ダークテーマの背景色 */
-                color: #eee; /* ダークテーマの文字色 */
-            }
-
-            h1 {
-                color: #eee; /* ダークテーマの文字色 */
-            }
-
-            p#status-text {
-                color: #bbb; /* ダークテーマの文字色 */
-            }
-
-            .simulation-area {
-                border: 2px solid #555; /* ダークテーマの枠線色 */
-                background-color: #333; /* ダークテーマのシミュレーション領域背景 */
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            }
-
-            .pivot {
-                background-color: #bbb; /* ダークテーマのピボット色 */
-            }
-
-            .arm {
-                background-color: #666; /* ダークテーマのアーム色 */
-            }
-
-            .weight {
-                background-color: #1e90ff; /* ダークテーマのおもり色 (ドジャーブルー) */
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-            }
+        
+        #simulation-container canvas {
+            display: block;
+            border-radius: 13px; /* コンテナの角丸より少し小さくする */
         }
     </style>
 </head>
@@ -147,46 +96,77 @@
     <div class="container">
         <h1>永久機関シミュレーション</h1>
         <p id="status-text">無限の動きを観察中...</p>
-        <div class="simulation-area">
-            <div class="pivot"></div>
-            <div class="arm">
-                <div class="weight"></div>
-            </div>
-        </div>
+        <!-- p5.jsがこのdivの中にcanvasを生成します -->
+        <div id="simulation-container"></div>
     </div>
 
     <script>
-        // JavaScriptは今回の「永久機関」の動き自体には直接関与しません。
-        // CSSアニメーションが無限の動きを処理し、CSSメディアクエリがテーマを自動で変更します。
-        // ここでは、ページの読み込みが完了したことを確認する簡単なログを出力します。
+        // シミュレーションのパラメータ
+        const armLength = 120;
+        const armHeight = 10;
+        const weightRadius = 15;
+        const pivotRadius = 10;
+        const rotationSpeed = 0.03; // 回転速度 (ラジアン/フレーム)
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('永久機関シミュレーションが読み込まれました。');
-            console.log('動きはCSSアニメーションによって制御されています。');
-            console.log('テーマはデバイスの設定に合わせて自動的に切り替わります。');
+        let currentAngle = 0; // 現在の回転角度
 
-            // JavaScriptでテーマを検出して何かをしたい場合、以下のようになりますが、
-            // 今回のCSSメディアクエリでの実装では不要です。
-            /*
-            const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+        // p5.jsの初期化関数
+        function setup() {
+            const container = document.getElementById('simulation-container');
+            const canvas = createCanvas(container.clientWidth, container.clientHeight);
+            canvas.parent('simulation-container');
+            // 矩形の描画基点を中心に設定
+            rectMode(CENTER);
+        }
 
-            function applyTheme() {
-                if (prefersDarkScheme.matches) {
-                    document.body.classList.add('dark-theme');
-                    document.body.classList.remove('light-theme');
-                } else {
-                    document.body.classList.add('light-theme');
-                    document.body.classList.remove('dark-theme');
-                }
-            }
+        // p5.jsのアニメーションループ関数
+        function draw() {
+            // CSSカスタムプロパティから現在のテーマの色を取得
+            const style = getComputedStyle(document.documentElement);
+            const bgColor = style.getPropertyValue('--simulation-bg-color').trim();
+            const pivotColor = style.getPropertyValue('--pivot-color').trim();
+            const armColor = style.getPropertyValue('--arm-color').trim();
+            const weightColor = style.getPropertyValue('--weight-color').trim();
+            
+            // 背景を描画
+            background(bgColor);
 
-            // 初期ロード時
-            applyTheme();
+            // 描画の原点をキャンバスの中心に移動
+            translate(width / 2, height / 2);
 
-            // テーマ設定の変更を監視
-            prefersDarkScheme.addEventListener("change", applyTheme);
-            */
-        });
+            // === 描画開始 ===
+
+            // 1. アームとおもりの描画 (回転させる部分)
+            push(); // 現在の描画状態（座標系など）を保存
+            rotate(currentAngle); // 座標系を回転
+            
+            // アームを描画
+            noStroke();
+            fill(armColor);
+            rect(armLength / 2, 0, armLength, armHeight, armHeight / 2); // 角丸の矩形
+
+            // おもりを描画
+            fill(weightColor);
+            circle(armLength, 0, weightRadius * 2);
+
+            pop(); // 保存した描画状態に戻す（回転をリセット）
+
+            // 2. 支点の描画 (回転させない部分)
+            noStroke();
+            fill(pivotColor);
+            circle(0, 0, pivotRadius * 2);
+
+            // === 描画終了 ===
+
+            // 次のフレームのために角度を更新
+            currentAngle += rotationSpeed;
+        }
+        
+        // ウィンドウサイズが変更された場合（レスポンシブ対応）
+        function windowResized() {
+             const container = document.getElementById('simulation-container');
+             resizeCanvas(container.clientWidth, container.clientHeight);
+        }
     </script>
 </body>
 </html>
