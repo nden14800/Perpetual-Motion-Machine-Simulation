@@ -3,170 +3,923 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>永久機関シミュレーション (高画質版)</title>
-    <!-- Google Fonts - Robotoの読み込み -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <!-- p5.jsライブラリをインポート -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.1/p5.min.js"></script>
+    <title>永久機関シミュレーション: Overbalanced Wheel</title>
+    
+    <!-- Font: Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Highcharts -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
     <style>
-        /* CSSカスタムプロパティ (ライトテーマのデフォルト) */
         :root {
-            --bg-color: #f0f0f0;
-            --text-color: #333;
-            --secondary-text-color: #666;
-            --simulation-bg-color: #fff;
-            --border-color: #ccc;
-            --shadow-color: rgba(0, 0, 0, 0.1);
-            --pivot-color: #555;
-            --arm-color: #888;
-            --weight-color: #ff6347; /* トマト */
+            /* ライトテーマ */
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-color: #1d1d1f;
+            --accent-color: #007aff;
+            --accent-hover: #005bb5;
+            --warn-color: #ff9500;
+            --warn-hover: #e08300;
+            --border-color: #d2d2d7;
+            --wheel-color: #333333;
+            --input-bg: #f2f2f7;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        /* ダークテーマのスタイル設定 */
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-color: #222;
-                --text-color: #eee;
-                --secondary-text-color: #bbb;
-                --simulation-bg-color: #333;
-                --border-color: #555;
-                --shadow-color: rgba(0, 0, 0, 0.3);
-                --pivot-color: #bbb;
-                --arm-color: #666;
-                --weight-color: #1e90ff; /* ドジャーブルー */
+                /* ダークテーマ */
+                --bg-color: #000000;
+                --card-bg: #1c1c1e;
+                --text-color: #f5f5f7;
+                --accent-color: #0a84ff;
+                --accent-hover: #409cff;
+                --warn-color: #ff9f0a;
+                --warn-hover: #d48406;
+                --border-color: #38383a;
+                --wheel-color: #aaaaaa;
+                --input-bg: #2c2c2e;
+                --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             }
         }
 
-        /* グローバル設定 */
-        body {
-            font-family: 'Roboto', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .container {
-            text-align: center;
-            padding: 20px;
-            max-width: 600px;
-            width: 90%;
+        /* 全ての要素にRobotoフォントを適用 */
+        * {
+            font-family: 'Roboto', sans-serif !important;
             box-sizing: border-box;
         }
 
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
             color: var(--text-color);
-            transition: color 0.3s ease;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        p#status-text {
-            font-size: 1.1em;
-            margin-bottom: 30px;
-            color: var(--secondary-text-color);
-            transition: color 0.3s ease;
+        h1 {
+            font-weight: 300;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
         }
 
-        /* p5.jsが生成するcanvasを配置するコンテナ */
-        #simulation-container {
-            width: 300px;
-            height: 300px;
-            border: 2px solid var(--border-color);
-            border-radius: 15px;
-            background-color: var(--simulation-bg-color); /* 背景色はp5.jsでも描画するが、念のため設定 */
-            margin: 0 auto;
-            overflow: hidden; /* canvasの角を丸めるため */
-            box-shadow: 0 4px 8px var(--shadow-color);
-            transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
         }
-        
-        #simulation-container canvas {
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel.visual {
+            min-height: 500px;
+        }
+
+        /* 操作エリア */
+        .controls {
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        /* セレクトボックスのスタイル */
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: 2px solid var(--accent-color);
+            border-color: transparent;
+        }
+
+        /* マテリアル説明エリア */
+        .material-info {
+            font-size: 0.85rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        /* ボタンエリア */
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s, opacity 0.2s;
+            font-size: 0.95rem;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-warn {
+            background-color: var(--warn-color);
+            color: white;
+        }
+        .btn-warn:hover:not(:disabled) {
+            background-color: var(--warn-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: rgba(128, 128, 128, 0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        /* キャンバス */
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            flex-grow: 1;
+        }
+
+        canvas {
             display: block;
-            border-radius: 13px; /* コンテナの角丸より少し小さくする */
+            width: 100%;
+            height: 100%;
+        }
+
+        /* グラフコンテナ */
+        .charts-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: auto;
+        }
+
+        .chart-box {
+            width: 100%;
+            height: 220px;
+            border-radius: 8px;
+            overflow: hidden;
         }
     </style>
 </head>
 <body>
+
+    <h1>永久機関シミュレーション: Overbalanced Wheel</h1>
+
     <div class="container">
-        <h1>永久機関シミュレーション</h1>
-        <p id="status-text">無限の動きを観察中...</p>
-        <!-- p5.jsがこのdivの中にcanvasを生成します -->
-        <div id="simulation-container"></div>
+        <!-- 左パネル: 描画エリア -->
+        <div class="panel visual">
+            <div id="canvas-container">
+                <canvas id="simCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- 右パネル: 操作パネル & グラフ -->
+        <div class="panel">
+            <div class="controls">
+                <!-- モード選択 -->
+                <div class="radio-group">
+                    <label style="justify-content: flex-start; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="mode" value="still" checked>
+                        静止から開始
+                    </label>
+                    <label style="justify-content: flex-start; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="mode" value="spin">
+                        手で勢いよく回す
+                    </label>
+                </div>
+
+                <!-- 重りの素材 -->
+                <div class="control-group">
+                    <label for="material-type">重りの素材を選択</label>
+                    <select id="material-type">
+                        <option value="iron" selected>鉄 (標準)</option>
+                        <option value="gold">金 (超高密度)</option>
+                        <option value="wood">木 (軽量)</option>
+                        <option value="mercury">水銀 (流体・変動)</option>
+                        <option value="magnet">ネオジム磁石 (反発)</option>
+                    </select>
+                </div>
+                <div id="material-desc" class="material-info"></div>
+
+                <!-- 時間スケール -->
+                <div class="control-group">
+                    <label>シミュレーション速度: <span id="val-time-scale">1.0</span>x</label>
+                    <input type="range" id="time-scale" min="0.1" max="10" step="0.1" value="1.0">
+                </div>
+
+                <!-- 物理パラメータ -->
+                <div class="control-group">
+                    <label>エネルギー効率: <span id="val-efficiency">100</span>%</label>
+                    <input type="range" id="efficiency" min="90" max="110" step="0.1" value="100">
+                    <div style="font-size: 0.8rem; color: var(--accent-color); text-align: right;">※100%で永久回転、100%超で加速</div>
+                </div>
+
+                <div class="control-group">
+                    <label>重力加速度 (g): <span id="val-gravity">9.8</span> m/s²</label>
+                    <input type="range" id="gravity" min="1" max="30" step="0.1" value="9.8">
+                </div>
+
+                <div class="control-group">
+                    <label>ホイール半径: <span id="val-radius">2.0</span> m</label>
+                    <input type="range" id="radius" min="1.0" max="4.0" step="0.1" value="2.0">
+                </div>
+
+                <!-- グラフ設定 -->
+                <div class="control-group">
+                    <label for="chart-type">グラフの線種</label>
+                    <select id="chart-type">
+                        <option value="spline" selected>滑らかな線 (Spline)</option>
+                        <option value="line">直線 (Line)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>グラフ更新間隔 (Sim時間): <span id="val-graph-freq">0.05</span> 秒</label>
+                    <input type="range" id="graph-freq" min="0.01" max="1.0" step="0.01" value="0.05">
+                </div>
+
+                <div class="control-group">
+                    <label>グラフ表示期間: <span id="val-graph-duration">10</span> 秒</label>
+                    <input type="range" id="graph-duration" min="1" max="60" step="1" value="10">
+                </div>
+
+                <!-- ボタン群 -->
+                <div class="btn-group">
+                    <button id="btn-start" class="btn-primary">開始</button>
+                    <button id="btn-stop" class="btn-warn" disabled>ストップ</button>
+                    <button id="btn-resume" class="btn-primary" disabled>再開</button>
+                    <button id="btn-reset" class="btn-secondary">リセット</button>
+                </div>
+            </div>
+
+            <!-- Highcharts グラフ群 -->
+            <div class="charts-wrapper">
+                <div id="chart-rpm" class="chart-box"></div>
+                <div id="chart-energy" class="chart-box"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // シミュレーションのパラメータ
-        const armLength = 120;
-        const armHeight = 10;
-        const weightRadius = 15;
-        const pivotRadius = 10;
-        const rotationSpeed = 0.03; // 回転速度 (ラジアン/フレーム)
-
-        let currentAngle = 0; // 現在の回転角度
-
-        // p5.jsの初期化関数
-        function setup() {
-            const container = document.getElementById('simulation-container');
-            const canvas = createCanvas(container.clientWidth, container.clientHeight);
-            canvas.parent('simulation-container');
-            // 矩形の描画基点を中心に設定
-            rectMode(CENTER);
-        }
-
-        // p5.jsのアニメーションループ関数
-        function draw() {
-            // CSSカスタムプロパティから現在のテーマの色を取得
-            const style = getComputedStyle(document.documentElement);
-            const bgColor = style.getPropertyValue('--simulation-bg-color').trim();
-            const pivotColor = style.getPropertyValue('--pivot-color').trim();
-            const armColor = style.getPropertyValue('--arm-color').trim();
-            const weightColor = style.getPropertyValue('--weight-color').trim();
-            
-            // 背景を描画
-            background(bgColor);
-
-            // 描画の原点をキャンバスの中心に移動
-            translate(width / 2, height / 2);
-
-            // === 描画開始 ===
-
-            // 1. アームとおもりの描画 (回転させる部分)
-            push(); // 現在の描画状態（座標系など）を保存
-            rotate(currentAngle); // 座標系を回転
-            
-            // アームを描画
-            noStroke();
-            fill(armColor);
-            rect(armLength / 2, 0, armLength, armHeight, armHeight / 2); // 角丸の矩形
-
-            // おもりを描画
-            fill(weightColor);
-            circle(armLength, 0, weightRadius * 2);
-
-            pop(); // 保存した描画状態に戻す（回転をリセット）
-
-            // 2. 支点の描画 (回転させない部分)
-            noStroke();
-            fill(pivotColor);
-            circle(0, 0, pivotRadius * 2);
-
-            // === 描画終了 ===
-
-            // 次のフレームのために角度を更新
-            currentAngle += rotationSpeed;
-        }
+        // --- 設定と状態 ---
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
         
-        // ウィンドウサイズが変更された場合（レスポンシブ対応）
-        function windowResized() {
-             const container = document.getElementById('simulation-container');
-             resizeCanvas(container.clientWidth, container.clientHeight);
+        // 素材（重り）の定義
+        const materialDefinitions = {
+            iron: { 
+                label: "鉄", 
+                color: "#8e8e93", 
+                massScale: 1.0,
+                desc: "標準的な重りです。アームに沿ってスライドし、右側で伸び、左側で縮むことで回転力を生み出そうとします。" 
+            },
+            gold: { 
+                label: "金", 
+                color: "#ffd700", 
+                massScale: 2.5,
+                desc: "非常に高密度な素材。質量が大きいため、生み出されるトルクも強大になります。" 
+            },
+            wood: { 
+                label: "木", 
+                color: "#d2b48c", 
+                massScale: 0.3,
+                desc: "軽量素材。慣性モーメントが小さいため、少しの力で加速しますが、外乱の影響も受けやすいです。" 
+            },
+            mercury: { 
+                label: "水銀", 
+                color: "#e0e0e0", 
+                massScale: 1.8,
+                desc: "流体金属。重心移動が滑らかで、理想的なオーバーバランス状態を作りやすいとされています。" 
+            },
+            magnet: { 
+                label: "ネオジム磁石", 
+                color: "#ff2d55", 
+                massScale: 1.0,
+                desc: "磁力アシスト（仮想）により、頂点付近での押し出しが強化される設定です。" 
+            }
+        };
+
+        // 物理エンジンの状態
+        let state = {
+            angle: 0,       // ホイールの回転角 (ラジアン)
+            omega: 0,       // 角速度 (rad/s)
+            t: 0,           // 経過時間
+            running: false,
+            paused: false,
+            armCount: 12,   // アームの本数
+            originX: 0,
+            originY: 0,
+            ppm: 0,         // Pixels Per Meter
+            lastGraphUpdate: 0,
+            // 重りの現在位置データ (各アーム上の位置 0.0~1.0)
+            weights: [],
+            // 平均計算用
+            sumRPM: 0,
+            countRPM: 0,
+            sumEnergy: 0,
+            countEnergy: 0
+        };
+
+        let animationId;
+        let chartRPM, chartEnergy;
+        const baseTimeStep = 1/60; 
+
+        // --- 要素取得 ---
+        const elMaterialSelect = document.getElementById('material-type');
+        const elMaterialDesc = document.getElementById('material-desc');
+        const elEfficiency = document.getElementById('efficiency');
+        const elGravity = document.getElementById('gravity');
+        const elRadius = document.getElementById('radius');
+        const elGraphFreq = document.getElementById('graph-freq');
+        const elGraphDuration = document.getElementById('graph-duration');
+        const elTimeScale = document.getElementById('time-scale');
+        const elChartType = document.getElementById('chart-type');
+        
+        const elValEfficiency = document.getElementById('val-efficiency');
+        const elValGravity = document.getElementById('val-gravity');
+        const elValRadius = document.getElementById('val-radius');
+        const elValGraphFreq = document.getElementById('val-graph-freq');
+        const elValGraphDuration = document.getElementById('val-graph-duration');
+        const elValTimeScale = document.getElementById('val-time-scale');
+        
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const btnResume = document.getElementById('btn-resume');
+        const btnReset = document.getElementById('btn-reset');
+        const radioModes = document.getElementsByName('mode');
+
+        // --- Highcharts 設定 ---
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        const getChartTheme = (dark) => ({
+            backgroundColor: dark ? '#1c1c1e' : '#ffffff',
+            textColor: dark ? '#f5f5f7' : '#1d1d1f',
+            gridColor: dark ? '#38383a' : '#e0e0e3',
+            lineColorRPM: dark ? '#30d158' : '#34c759', // 緑系
+            lineColorEnergy: dark ? '#ff9f0a' : '#ff9500', // オレンジ系
+            avgColor:   dark ? '#8e8e93' : '#8e8e93'
+        });
+
+        function createChart(id, title, yAxisTitle, colorKey) {
+            const theme = getChartTheme(isDark);
+            const lineColor = theme[colorKey];
+
+            return Highcharts.chart(id, {
+                chart: {
+                    type: 'spline',
+                    backgroundColor: theme.backgroundColor,
+                    marginRight: 10,
+                    marginLeft: 60,
+                    animation: { duration: 300, easing: 'linear' }
+                },
+                title: {
+                    text: title,
+                    style: { color: theme.textColor, fontSize: '14px', fontFamily: 'Roboto' },
+                    align: 'left'
+                },
+                xAxis: {
+                    type: 'linear',
+                    title: { enabled: false },
+                    labels: { style: { color: theme.textColor, fontFamily: 'Roboto' } },
+                    lineColor: theme.gridColor,
+                    tickColor: theme.gridColor
+                },
+                yAxis: {
+                    title: { 
+                        text: yAxisTitle, 
+                        style: { color: theme.textColor, fontFamily: 'Roboto' } 
+                    },
+                    labels: { style: { color: theme.textColor, fontFamily: 'Roboto' } },
+                    gridLineColor: theme.gridColor
+                },
+                legend: { enabled: true, itemStyle: { color: theme.textColor } },
+                exporting: { enabled: false },
+                credits: { enabled: false },
+                plotOptions: {
+                    series: {
+                        marker: { enabled: false },
+                        lineWidth: 2,
+                        animation: false 
+                    }
+                },
+                series: [
+                    { 
+                        name: '値', 
+                        color: lineColor,
+                        data: [] 
+                    },
+                    { 
+                        name: '平均', 
+                        color: theme.avgColor,
+                        dashStyle: 'Dash',
+                        lineWidth: 1.5,
+                        data: []
+                    }
+                ]
+            });
         }
+
+        function initCharts() {
+            chartRPM = createChart('chart-rpm', '回転数 (RPM)', 'RPM', 'lineColorRPM');
+            chartEnergy = createChart('chart-energy', '総エネルギー (J)', 'Energy (J)', 'lineColorEnergy');
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            const newTheme = getChartTheme(event.matches);
+            [chartRPM, chartEnergy].forEach((chart, idx) => {
+                const color = idx === 0 ? newTheme.lineColorRPM : newTheme.lineColorEnergy;
+                chart.update({
+                    chart: { backgroundColor: newTheme.backgroundColor },
+                    title: { style: { color: newTheme.textColor } },
+                    xAxis: { 
+                        labels: { style: { color: newTheme.textColor } },
+                        lineColor: newTheme.gridColor,
+                        tickColor: newTheme.gridColor
+                    },
+                    yAxis: {
+                        title: { style: { color: newTheme.textColor } },
+                        labels: { style: { color: newTheme.textColor } },
+                        gridLineColor: newTheme.gridColor
+                    },
+                    legend: { itemStyle: { color: newTheme.textColor } },
+                    series: [
+                        { color: color },
+                        { color: newTheme.avgColor }
+                    ]
+                });
+            });
+            draw();
+        });
+
+        // --- 描画と物理 ---
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            
+            // 画面の高さを10メートル分とする
+            state.ppm = rect.height / 10;
+            state.originX = rect.width / 2 / dpr;
+            state.originY = rect.height / 2 / dpr;
+            
+            draw();
+        }
+
+        function getColors() {
+            const style = getComputedStyle(document.body);
+            return {
+                wheel: style.getPropertyValue('--wheel-color').trim(),
+                text: style.getPropertyValue('--text-color').trim()
+            };
+        }
+
+        function getMaterial() {
+            const type = elMaterialSelect.value;
+            return materialDefinitions[type];
+        }
+
+        function updatePhysics() {
+            const g = parseFloat(elGravity.value);
+            const radius = parseFloat(elRadius.value);
+            const eff = parseFloat(elEfficiency.value) / 100; // 1.0 = 100%
+            const timeScale = parseFloat(elTimeScale.value);
+            const mat = getMaterial();
+
+            let steps = 1;
+            if (timeScale > 2.0) steps = Math.ceil(timeScale);
+            const dt = (baseTimeStep * timeScale) / steps;
+
+            for (let s = 0; s < steps; s++) {
+                let totalTorque = 0;
+                let totalInertia = 0;
+
+                // 各アームと重りの計算
+                for (let i = 0; i < state.armCount; i++) {
+                    // アームの角度
+                    const armAngle = state.angle + (2 * Math.PI * i / state.armCount);
+                    const cos = Math.cos(armAngle);
+                    const sin = Math.sin(armAngle);
+
+                    // 重りの位置シミュレーション (スライド)
+                    // 右側 (cos > 0) にあるときは外側に、左側 (cos < 0) にあるときは内側にスライド
+                    // スライド速度は適当な定数で
+                    let targetDist = (cos > -0.2) ? 1.0 : 0.4; // 右側～底は伸びる、左上は縮む
+                    
+                    // マグネットモードの特別挙動
+                    if(elMaterialSelect.value === 'magnet') {
+                        // 頂点付近で強力に外へ飛び出す
+                        if (sin < -0.8) targetDist = 1.0;
+                    }
+
+                    // 位置の更新 (慣性や摩擦を簡易的に表現して徐々に移動)
+                    const slideSpeed = 2.0 * dt;
+                    if (state.weights[i] < targetDist) state.weights[i] += slideSpeed;
+                    else if (state.weights[i] > targetDist) state.weights[i] -= slideSpeed;
+
+                    const dist = state.weights[i] * radius;
+
+                    // トルク計算: Torque = r * F * sin(theta_force)
+                    // 重力は下向き。接線方向の成分は cos(armAngle)
+                    // Torque = dist * (mass * g) * cos(armAngle)
+                    const mass = 1.0 * mat.massScale;
+                    const torque = dist * (mass * g) * cos;
+                    
+                    totalTorque += torque;
+                    
+                    // 慣性モーメント I = m * r^2
+                    totalInertia += mass * dist * dist;
+                }
+
+                // 基本慣性モーメント（ホイール自体）
+                totalInertia += 5.0 * radius * radius; 
+
+                // 角加速度 alpha = Torque / Inertia
+                const alpha = totalTorque / totalInertia;
+
+                // 速度更新
+                state.omega += alpha * dt;
+
+                // 効率の適用 (摩擦またはエネルギー注入)
+                // 通常の物理では eff < 1.0 (摩擦で減衰)
+                // 永久機関では eff = 1.0 (減衰なし), eff > 1.0 (加速)
+                // 簡単のため、速度に対して乗算で適用
+                // 厳密な物理計算ではないが、シミュレーションの目的（永久機関の演出）に合わせる
+                if (Math.abs(state.omega) > 0) {
+                    // 減衰係数 k を効率から逆算
+                    // eff = 1.0 -> k = 1.0
+                    // eff = 0.9 -> k = 0.999... (1ステップあたり)
+                    const frictionFactor = 1.0 - (1.0 - eff) * 0.05 * timeScale; 
+                    state.omega *= frictionFactor;
+                }
+
+                state.angle += state.omega * dt;
+                state.t += dt;
+            }
+        }
+
+        function draw() {
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+            const colors = getColors();
+            const mat = getMaterial();
+            const radius = parseFloat(elRadius.value) * state.ppm;
+
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.save();
+            ctx.translate(state.originX, state.originY);
+
+            // ホイールの描画
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = colors.wheel;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 中心軸
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fillStyle = colors.wheel;
+            ctx.fill();
+
+            // アームと重りの描画
+            for (let i = 0; i < state.armCount; i++) {
+                const armAngle = state.angle + (2 * Math.PI * i / state.armCount);
+                const cos = Math.cos(armAngle);
+                const sin = Math.sin(armAngle);
+
+                // アーム線
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(radius * cos, radius * sin);
+                ctx.strokeStyle = "rgba(128,128,128,0.5)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // 重り
+                const wDist = state.weights[i] * radius;
+                const wx = wDist * cos;
+                const wy = wDist * sin;
+                const rSize = 10 * mat.massScale + 5; // 質量に応じてサイズ変化
+
+                // 重り本体
+                ctx.beginPath();
+                ctx.arc(wx, wy, rSize, 0, Math.PI * 2);
+                ctx.fillStyle = mat.color;
+                ctx.fill();
+                
+                // ハイライト
+                ctx.beginPath();
+                ctx.arc(wx - rSize*0.3, wy - rSize*0.3, rSize/3, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(255,255,255,0.4)";
+                ctx.fill();
+            }
+
+            ctx.restore();
+
+            // テキスト情報
+            ctx.fillStyle = colors.text;
+            ctx.font = "14px Roboto";
+            const rpm = (state.omega * 60 / (2 * Math.PI)).toFixed(1);
+            ctx.fillText(`回転数: ${rpm} RPM`, 10, 25);
+            ctx.fillText(`角速度: ${state.omega.toFixed(2)} rad/s`, 10, 45);
+            ctx.fillText(`時間: ${state.t.toFixed(2)} s`, 10, 65);
+        }
+
+        // --- メインループ ---
+        function loop() {
+            if (!state.running) return;
+            if (state.paused) return;
+
+            updatePhysics();
+            draw();
+
+            // グラフ更新
+            const freq = parseFloat(elGraphFreq.value);
+            const maxDuration = parseFloat(elGraphDuration.value);
+
+            if (state.t - state.lastGraphUpdate >= freq) {
+                const rpm = Math.abs(state.omega * 60 / (2 * Math.PI));
+                // 簡易的なエネルギー計算 E = 1/2 I w^2 (イナーシャは適当な定数で近似)
+                const energy = 0.5 * 10.0 * state.omega * state.omega;
+
+                // 平均計算
+                state.sumRPM += rpm;
+                state.countRPM++;
+                state.sumEnergy += energy;
+                state.countEnergy++;
+
+                const avgRPM = state.sumRPM / state.countRPM;
+                const avgEnergy = state.sumEnergy / state.countEnergy;
+
+                // シフト判定
+                const seriesR = chartRPM.series[0];
+                const shouldShift = seriesR.data.length > 0 && 
+                                    (state.t - seriesR.data[0].x) > maxDuration;
+
+                chartRPM.series[0].addPoint([state.t, rpm], true, shouldShift);
+                chartRPM.series[1].addPoint([state.t, avgRPM], true, shouldShift);
+
+                chartEnergy.series[0].addPoint([state.t, energy], true, shouldShift);
+                chartEnergy.series[1].addPoint([state.t, avgEnergy], true, shouldShift);
+
+                if (shouldShift || state.t > maxDuration) {
+                    const min = state.t - maxDuration;
+                    const max = state.t;
+                    chartRPM.xAxis[0].setExtremes(min, max);
+                    chartEnergy.xAxis[0].setExtremes(min, max);
+                }
+                
+                state.lastGraphUpdate = state.t;
+            }
+
+            animationId = requestAnimationFrame(loop);
+        }
+
+        // --- UI操作 ---
+        function updateMaterialType() {
+            const type = elMaterialSelect.value;
+            const def = materialDefinitions[type];
+            elMaterialDesc.textContent = def.desc;
+            draw();
+        }
+
+        function updateButtonState() {
+            if (state.running && !state.paused) {
+                btnStart.disabled = true;
+                btnStop.disabled = false;
+                btnResume.disabled = true;
+                elMaterialSelect.disabled = true; 
+            } else if (state.running && state.paused) {
+                btnStart.disabled = true;
+                btnStop.disabled = true;
+                btnResume.disabled = false;
+                elMaterialSelect.disabled = true;
+            } else {
+                btnStart.disabled = false;
+                btnStop.disabled = true;
+                btnResume.disabled = true;
+                elMaterialSelect.disabled = false;
+            }
+        }
+
+        function updateChartType() {
+            const type = elChartType.value;
+            chartRPM.update({ chart: { type: type } });
+            chartEnergy.update({ chart: { type: type } });
+        }
+
+        function startSimulation() {
+            if (state.running && !state.paused) return;
+
+            let mode = 'still';
+            for(const radio of radioModes) {
+                if(radio.checked) mode = radio.value;
+            }
+
+            state.t = 0;
+            state.lastGraphUpdate = 0;
+            state.angle = 0;
+            
+            // 重りの初期位置リセット (ランダム性を持たせるか、固定か)
+            state.weights = new Array(state.armCount).fill(0.5);
+
+            if (mode === 'still') {
+                state.omega = 0;
+                // 静止からでも動き出すように、初期状態を少しアンバランスにする
+                state.weights[0] = 1.0; 
+            } else {
+                state.omega = 3.0; // 初期回転を与える
+            }
+
+            state.running = true;
+            state.paused = false;
+
+            state.sumRPM = 0;
+            state.countRPM = 0;
+            state.sumEnergy = 0;
+            state.countEnergy = 0;
+
+            chartRPM.series[0].setData([]);
+            chartRPM.series[1].setData([]);
+            chartEnergy.series[0].setData([]);
+            chartEnergy.series[1].setData([]);
+            chartRPM.xAxis[0].setExtremes(null, null);
+            chartEnergy.xAxis[0].setExtremes(null, null);
+
+            radioModes.forEach(r => r.disabled = true);
+            updateButtonState();
+            loop();
+        }
+
+        function stopSimulation() {
+            if (!state.running) return;
+            state.paused = true;
+            cancelAnimationFrame(animationId);
+            updateButtonState();
+        }
+
+        function resumeSimulation() {
+            if (!state.running || !state.paused) return;
+            state.paused = false;
+            updateButtonState();
+            loop();
+        }
+
+        function resetSimulation() {
+            state.running = false;
+            state.paused = false;
+            cancelAnimationFrame(animationId);
+            
+            state.t = 0;
+            state.omega = 0;
+            state.angle = 0;
+            state.weights = new Array(state.armCount).fill(0.5);
+            
+            state.sumRPM = 0;
+            state.countRPM = 0;
+            state.sumEnergy = 0;
+            state.countEnergy = 0;
+
+            chartRPM.series[0].setData([]);
+            chartRPM.series[1].setData([]);
+            chartEnergy.series[0].setData([]);
+            chartEnergy.series[1].setData([]);
+            
+            updateMaterialType();
+            
+            radioModes.forEach(r => r.disabled = false);
+            updateButtonState();
+            draw();
+        }
+
+        // --- イベントリスナー ---
+        btnStart.addEventListener('click', startSimulation);
+        btnStop.addEventListener('click', stopSimulation);
+        btnResume.addEventListener('click', resumeSimulation);
+        btnReset.addEventListener('click', resetSimulation);
+
+        elMaterialSelect.addEventListener('change', updateMaterialType);
+        elChartType.addEventListener('change', updateChartType);
+
+        elEfficiency.addEventListener('input', (e) => elValEfficiency.textContent = e.target.value);
+        elGravity.addEventListener('input', (e) => elValGravity.textContent = e.target.value);
+        elRadius.addEventListener('input', (e) => {
+            elValRadius.textContent = e.target.value;
+            if(!state.running) draw();
+        });
+        elGraphFreq.addEventListener('input', (e) => elValGraphFreq.textContent = e.target.value);
+        elGraphDuration.addEventListener('input', (e) => elValGraphDuration.textContent = e.target.value);
+        elTimeScale.addEventListener('input', (e) => elValTimeScale.textContent = e.target.value);
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- 初期化 ---
+        initCharts();
+        resizeCanvas();
+        updateMaterialType();
+        resetSimulation();
+
     </script>
 </body>
 </html>
