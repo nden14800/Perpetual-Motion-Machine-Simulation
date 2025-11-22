@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>永久機関シミュレーション: Overbalanced Wheel</title>
+    <title>永久機関シミュレーション: Ultimate Water System</title>
     
     <!-- Font: Roboto -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,37 +17,36 @@
     <style>
         :root {
             /* ライトテーマ */
-            --bg-color: #f5f5f7;
+            --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --text-color: #1d1d1f;
+            --text-color: #1c1e21;
             --accent-color: #007aff;
             --accent-hover: #005bb5;
-            --warn-color: #ff9500;
-            --warn-hover: #e08300;
-            --border-color: #d2d2d7;
+            --warn-color: #ff3b30;
+            --border-color: #dadde1;
             --wheel-color: #333333;
-            --input-bg: #f2f2f7;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --input-bg: #e4e6eb;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --water-color: rgba(0, 150, 255, 0.6);
+            --flood-color: rgba(0, 80, 180, 0.5);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
                 /* ダークテーマ */
-                --bg-color: #000000;
-                --card-bg: #1c1c1e;
-                --text-color: #f5f5f7;
-                --accent-color: #0a84ff;
-                --accent-hover: #409cff;
-                --warn-color: #ff9f0a;
-                --warn-hover: #d48406;
-                --border-color: #38383a;
-                --wheel-color: #aaaaaa;
-                --input-bg: #2c2c2e;
-                --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                --bg-color: #18191a;
+                --card-bg: #242526;
+                --text-color: #e4e6eb;
+                --accent-color: #4599ff;
+                --accent-hover: #6baaff;
+                --warn-color: #ff5e55;
+                --border-color: #3e4042;
+                --wheel-color: #b0b3b8;
+                --input-bg: #3a3b3c;
+                --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
             }
         }
 
-        /* 全ての要素にRobotoフォントを適用 */
         * {
             font-family: 'Roboto', sans-serif !important;
             box-sizing: border-box;
@@ -74,13 +73,13 @@
 
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.2fr 0.8fr;
             gap: 20px;
             width: 100%;
-            max-width: 1400px;
+            max-width: 1600px;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1000px) {
             .container {
                 grid-template-columns: 1fr;
             }
@@ -88,28 +87,52 @@
 
         .panel {
             background-color: var(--card-bg);
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 20px;
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
+            border: 1px solid var(--border-color);
         }
 
         .panel.visual {
-            min-height: 500px;
+            min-height: 600px;
         }
 
         /* 操作エリア */
         .controls {
-            gap: 15px;
+            gap: 10px;
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            max-height: 850px;
+            overflow-y: auto;
+            padding-right: 5px; 
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .sub-group {
+            margin-left: 10px;
+            padding-left: 10px;
+            border-left: 2px solid var(--accent-color);
+            display: flex;
+            flex-direction: column;
             gap: 8px;
-            margin-bottom: 15px;
+            background: rgba(128, 128, 128, 0.05);
+            padding: 10px;
+            border-radius: 0 8px 8px 0;
         }
 
         label {
@@ -119,14 +142,51 @@
             justify-content: space-between;
             align-items: center;
         }
+        
+        .value-badge {
+            background-color: var(--input-bg);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace !important;
+            font-weight: bold;
+            font-size: 0.85rem;
+            min-width: 80px;
+            text-align: right;
+        }
 
         input[type="range"] {
             width: 100%;
             accent-color: var(--accent-color);
             cursor: pointer;
+            height: 6px;
+            background: var(--input-bg);
+            border-radius: 3px;
+            appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            cursor: pointer;
         }
 
-        /* セレクトボックスのスタイル */
+        .slider-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="number"] {
+            width: 90px;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-family: monospace;
+        }
+
         select {
             width: 100%;
             padding: 10px;
@@ -134,30 +194,46 @@
             border: 1px solid var(--border-color);
             background-color: var(--input-bg);
             color: var(--text-color);
-            font-size: 1rem;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 16px;
+            font-size: 0.95rem;
             cursor: pointer;
         }
-        select:focus {
-            outline: 2px solid var(--accent-color);
-            border-color: transparent;
-        }
 
-        /* マテリアル説明エリア */
-        .material-info {
-            font-size: 0.85rem;
-            color: var(--text-color);
-            opacity: 0.8;
+        .radio-toggle {
+            display: flex;
+            gap: 10px;
             background: var(--input-bg);
-            padding: 10px;
+            padding: 4px;
             border-radius: 8px;
-            margin-top: -10px;
-            margin-bottom: 10px;
-            line-height: 1.4;
+        }
+        .radio-toggle label {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+        .radio-toggle input { display: none; }
+        .radio-toggle input:checked + span {
+            background: var(--card-bg);
+            color: var(--accent-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .radio-toggle span {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* ボタンエリア */
@@ -172,63 +248,31 @@
             padding: 12px;
             border: none;
             border-radius: 8px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s, opacity 0.2s;
+            transition: all 0.2s;
             font-size: 0.95rem;
         }
 
-        button:active {
-            transform: scale(0.98);
-        }
+        button:active { transform: scale(0.98); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .btn-primary { background-color: var(--accent-color); color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: var(--accent-hover); }
 
-        .btn-primary {
-            background-color: var(--accent-color);
-            color: white;
-        }
-        .btn-primary:hover:not(:disabled) {
-            background-color: var(--accent-hover);
-        }
+        .btn-warn { background-color: var(--warn-color); color: white; }
+        .btn-warn:hover:not(:disabled) { background-color: #d6352b; }
 
-        .btn-warn {
-            background-color: var(--warn-color);
-            color: white;
-        }
-        .btn-warn:hover:not(:disabled) {
-            background-color: var(--warn-hover);
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-        }
-        .btn-secondary:hover:not(:disabled) {
-            background-color: rgba(128, 128, 128, 0.1);
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-        }
+        .btn-secondary { background-color: transparent; border: 1px solid var(--border-color); color: var(--text-color); }
+        .btn-secondary:hover:not(:disabled) { background-color: var(--input-bg); }
 
         /* キャンバス */
         #canvas-container {
             position: relative;
             width: 100%;
             height: 100%;
-            min-height: 400px;
-            background: var(--bg-color);
+            min-height: 500px;
+            background: var(--bg-color); 
             border-radius: 8px;
             overflow: hidden;
             border: 1px solid var(--border-color);
@@ -246,20 +290,24 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            margin-top: auto;
+            margin-top: 10px;
+            flex-grow: 1;
         }
 
         .chart-box {
             width: 100%;
-            height: 220px;
+            height: 160px;
             border-radius: 8px;
             overflow: hidden;
+            border: 1px solid var(--border-color);
         }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <h1>永久機関シミュレーション: Overbalanced Wheel</h1>
+    <h1>永久機関シミュレーション: Ultimate Water System</h1>
 
     <div class="container">
         <!-- 左パネル: 描画エリア -->
@@ -272,653 +320,834 @@
         <!-- 右パネル: 操作パネル & グラフ -->
         <div class="panel">
             <div class="controls">
-                <!-- モード選択 -->
-                <div class="radio-group">
-                    <label style="justify-content: flex-start; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="mode" value="still" checked>
-                        静止から開始
-                    </label>
-                    <label style="justify-content: flex-start; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="mode" value="spin">
-                        手で勢いよく回す
-                    </label>
-                </div>
-
-                <!-- 重りの素材 -->
-                <div class="control-group">
-                    <label for="material-type">重りの素材を選択</label>
+                <!-- 素材選択 (回転モード用) -->
+                <div id="ctrl-material" class="control-group">
+                    <label for="material-type">重りの素材 (回転モード時のみ)</label>
                     <select id="material-type">
                         <option value="iron" selected>鉄 (標準)</option>
                         <option value="gold">金 (超高密度)</option>
                         <option value="wood">木 (軽量)</option>
-                        <option value="mercury">水銀 (流体・変動)</option>
+                        <option value="mercury">水銀 (流体)</option>
                         <option value="magnet">ネオジム磁石 (反発)</option>
                     </select>
                 </div>
-                <div id="material-desc" class="material-info"></div>
 
-                <!-- 時間スケール -->
+                <!-- モード切替 -->
                 <div class="control-group">
-                    <label>シミュレーション速度: <span id="val-time-scale">1.0</span>x</label>
-                    <input type="range" id="time-scale" min="0.1" max="10" step="0.1" value="1.0">
+                    <label>表示モード</label>
+                    <div class="radio-toggle">
+                        <label>
+                            <input type="radio" name="display-mode" value="wheel" checked>
+                            <span>回転ホイール</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="display-mode" value="water">
+                            <span>水槽 (注水・浸水)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 水設定サブパネル -->
+                <div id="water-settings" class="control-group hidden">
+                    <div class="sub-group">
+                        <label>容器タイプ</label>
+                        <select id="water-container">
+                            <option value="beaker">ビーカー (2 L)</option>
+                            <option value="bathtub" selected>浴槽 (200 L)</option>
+                            <option value="tank">大型水槽 (5,000 L)</option>
+                        </select>
+
+                        <label>注水スタイル</label>
+                        <div class="radio-toggle">
+                            <label>
+                                <input type="radio" name="water-input-type" value="tube" checked>
+                                <span>チューブ (直下)</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="water-input-type" value="shower">
+                                <span>シャワー (拡散)</span>
+                            </label>
+                        </div>
+
+                        <label>容器の排水バルブ</label>
+                        <div class="radio-toggle">
+                            <label>
+                                <input type="radio" name="container-drain" value="closed" checked>
+                                <span>閉じる (溜める)</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="container-drain" value="open">
+                                <span>開く (抜く)</span>
+                            </label>
+                        </div>
+
+                        <label>地面の排水溝</label>
+                        <div class="radio-toggle">
+                            <label>
+                                <input type="radio" name="ground-drain" value="closed" checked>
+                                <span>閉じる (浸水)</span>
+                            </label>
+                            <label>
+                                <input type="radio" name="ground-drain" value="open">
+                                <span>開く (排水)</span>
+                            </label>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--accent-color); margin-top:4px;">
+                            ※地面の排水溝を閉じると、溢れた水で画面が埋まります。
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 物理パラメータ -->
+                <!-- 回転制御モード -->
                 <div class="control-group">
-                    <label>エネルギー効率: <span id="val-efficiency">100</span>%</label>
-                    <input type="range" id="efficiency" min="90" max="110" step="0.1" value="100">
-                    <div style="font-size: 0.8rem; color: var(--accent-color); text-align: right;">※100%で永久回転、100%超で加速</div>
+                    <label>出力制御 (動力源)</label>
+                    <div class="radio-toggle">
+                        <label>
+                            <input type="radio" name="ctrl-mode" value="fixed" checked>
+                            <span>固定出力</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="ctrl-mode" value="scenario">
+                            <span>シナリオ (加速)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 固定回転設定 -->
+                <div id="ctrl-fixed" class="control-group">
+                    <label>目標出力 (RPM相当)</label>
+                    <div class="slider-input-group">
+                        <input type="range" id="rpm-slider" min="0" max="1000" step="1" value="500">
+                        <input type="number" id="rpm-input" min="0.01" max="6000" step="0.1" value="10.0">
+                    </div>
+                </div>
+
+                <!-- シナリオ設定 -->
+                <div id="ctrl-scenario" class="control-group hidden">
+                    <div class="sub-group">
+                        <label>開始出力: <input type="number" id="sc-start-rpm" value="10" style="width:70px;"></label>
+                        <label>終了出力: <input type="number" id="sc-end-rpm" value="1000" style="width:70px;"></label>
+                        <label>所要時間 (秒): <span id="val-sc-duration" class="value-badge">30 s</span></label>
+                        <input type="range" id="sc-duration" min="5" max="300" step="5" value="30">
+                        
+                        <label>推移タイプ</label>
+                        <select id="sc-growth-type">
+                            <option value="linear">直線 (Linear)</option>
+                            <option value="exp" selected>指数関数 (Exponential)</option>
+                        </select>
+
+                        <div id="sc-exp-settings">
+                            <label>急激さ: <span id="val-sc-factor" class="value-badge">3.0</span></label>
+                            <input type="range" id="sc-factor" min="1.1" max="10.0" step="0.1" value="3.0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 共通設定 -->
+                <div class="control-group">
+                    <label>シミュレーション速度: <span id="val-time-scale" class="value-badge">1x</span></label>
+                    <input type="range" id="time-scale" min="1" max="100" step="1" value="1">
                 </div>
 
                 <div class="control-group">
-                    <label>重力加速度 (g): <span id="val-gravity">9.8</span> m/s²</label>
-                    <input type="range" id="gravity" min="1" max="30" step="0.1" value="9.8">
+                    <label>グラフ表示期間: <span id="val-graph-duration" class="value-badge">60 s</span></label>
+                    <input type="range" id="graph-duration" min="10" max="600" step="10" value="60">
                 </div>
 
-                <div class="control-group">
-                    <label>ホイール半径: <span id="val-radius">2.0</span> m</label>
-                    <input type="range" id="radius" min="1.0" max="4.0" step="0.1" value="2.0">
-                </div>
-
-                <!-- グラフ設定 -->
-                <div class="control-group">
-                    <label for="chart-type">グラフの線種</label>
-                    <select id="chart-type">
-                        <option value="spline" selected>滑らかな線 (Spline)</option>
-                        <option value="line">直線 (Line)</option>
-                    </select>
-                </div>
-
-                <div class="control-group">
-                    <label>グラフ更新間隔 (Sim時間): <span id="val-graph-freq">0.05</span> 秒</label>
-                    <input type="range" id="graph-freq" min="0.01" max="1.0" step="0.01" value="0.05">
-                </div>
-
-                <div class="control-group">
-                    <label>グラフ表示期間: <span id="val-graph-duration">10</span> 秒</label>
-                    <input type="range" id="graph-duration" min="1" max="60" step="1" value="10">
-                </div>
-
-                <!-- ボタン群 -->
+                <!-- ボタン -->
                 <div class="btn-group">
                     <button id="btn-start" class="btn-primary">開始</button>
-                    <button id="btn-stop" class="btn-warn" disabled>ストップ</button>
+                    <button id="btn-stop" class="btn-warn" disabled>一時停止</button>
                     <button id="btn-resume" class="btn-primary" disabled>再開</button>
                     <button id="btn-reset" class="btn-secondary">リセット</button>
                 </div>
             </div>
 
-            <!-- Highcharts グラフ群 -->
+            <!-- グラフ -->
             <div class="charts-wrapper">
-                <div id="chart-rpm" class="chart-box"></div>
+                <div id="chart-main" class="chart-box"></div>
                 <div id="chart-energy" class="chart-box"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 設定と状態 ---
+        // --- 基本設定 ---
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
         
-        // 素材（重り）の定義
+        // 定数・素材
         const materialDefinitions = {
-            iron: { 
-                label: "鉄", 
-                color: "#8e8e93", 
-                massScale: 1.0,
-                desc: "標準的な重りです。アームに沿ってスライドし、右側で伸び、左側で縮むことで回転力を生み出そうとします。" 
-            },
-            gold: { 
-                label: "金", 
-                color: "#ffd700", 
-                massScale: 2.5,
-                desc: "非常に高密度な素材。質量が大きいため、生み出されるトルクも強大になります。" 
-            },
-            wood: { 
-                label: "木", 
-                color: "#d2b48c", 
-                massScale: 0.3,
-                desc: "軽量素材。慣性モーメントが小さいため、少しの力で加速しますが、外乱の影響も受けやすいです。" 
-            },
-            mercury: { 
-                label: "水銀", 
-                color: "#e0e0e0", 
-                massScale: 1.8,
-                desc: "流体金属。重心移動が滑らかで、理想的なオーバーバランス状態を作りやすいとされています。" 
-            },
-            magnet: { 
-                label: "ネオジム磁石", 
-                color: "#ff2d55", 
-                massScale: 1.0,
-                desc: "磁力アシスト（仮想）により、頂点付近での押し出しが強化される設定です。" 
-            }
+            iron: { label: "鉄", color: "#8e8e93", massScale: 1.0 },
+            gold: { label: "金", color: "#ffd700", massScale: 2.5 },
+            wood: { label: "木", color: "#d2b48c", massScale: 0.3 },
+            mercury: { label: "水銀", color: "#e0e0e0", massScale: 1.8 },
+            magnet: { label: "ネオジム磁石", color: "#ff2d55", massScale: 1.0 }
         };
 
-        // 物理エンジンの状態
+        // 容器定義 (容量を更新)
+        const containerDefinitions = {
+            beaker: { width: 100, height: 120, color: "rgba(220,220,255,0.2)", name: "ビーカー", cap: 2 }, // 2L
+            bathtub: { width: 400, height: 150, color: "rgba(255,250,240,0.5)", name: "浴槽", cap: 200 }, // 200L
+            tank: { width: 300, height: 200, color: "rgba(200,255,255,0.15)", name: "大型水槽", cap: 5000 } // 5000L
+        };
+
+        // 状態管理
         let state = {
-            angle: 0,       // ホイールの回転角 (ラジアン)
-            omega: 0,       // 角速度 (rad/s)
-            t: 0,           // 経過時間
+            angle: 0,
+            omega: 0,
+            t: 0,
             running: false,
             paused: false,
-            armCount: 12,   // アームの本数
-            originX: 0,
-            originY: 0,
-            ppm: 0,         // Pixels Per Meter
-            lastGraphUpdate: 0,
-            // 重りの現在位置データ (各アーム上の位置 0.0~1.0)
+            armCount: 12,
             weights: [],
-            // 平均計算用
-            sumRPM: 0,
-            countRPM: 0,
-            sumEnergy: 0,
-            countEnergy: 0
+            totalEnergy: 0,
+            lastGraphUpdate: 0,
+            scenarioStartTime: 0,
+            
+            // 水シミュレーション
+            flowRate: 0, // L/s
+            waterLevel: 0, 
+            waterParticles: [], 
+            currentVolume: 0,
+            showerParticles: [],
+            floodVolume: 0 // 浸水総量(L)
         };
 
         let animationId;
-        let chartRPM, chartEnergy;
+        let chartMain, chartEnergy;
         const baseTimeStep = 1/60; 
 
-        // --- 要素取得 ---
-        const elMaterialSelect = document.getElementById('material-type');
-        const elMaterialDesc = document.getElementById('material-desc');
-        const elEfficiency = document.getElementById('efficiency');
-        const elGravity = document.getElementById('gravity');
-        const elRadius = document.getElementById('radius');
-        const elGraphFreq = document.getElementById('graph-freq');
+        // --- DOM要素 ---
+        const elMatSelect = document.getElementById('material-type');
+        const divCtrlMaterial = document.getElementById('ctrl-material');
+        
+        const radiosMode = document.getElementsByName('display-mode');
+        const radiosCtrl = document.getElementsByName('ctrl-mode');
+        const divCtrlFixed = document.getElementById('ctrl-fixed');
+        const divCtrlScenario = document.getElementById('ctrl-scenario');
+        
+        const elRpmSlider = document.getElementById('rpm-slider');
+        const elRpmInput = document.getElementById('rpm-input');
+        
+        const elScStart = document.getElementById('sc-start-rpm');
+        const elScEnd = document.getElementById('sc-end-rpm');
+        const elScDuration = document.getElementById('sc-duration');
+        const elValScDuration = document.getElementById('val-sc-duration');
+        const elScType = document.getElementById('sc-growth-type');
+        const elScFactorDiv = document.getElementById('sc-exp-settings');
+        const elScFactor = document.getElementById('sc-factor');
+        const elValScFactor = document.getElementById('val-sc-factor');
+
+        // 水関連
+        const divWaterSettings = document.getElementById('water-settings');
+        const elWaterContainer = document.getElementById('water-container');
+        const radiosWaterInput = document.getElementsByName('water-input-type');
+        const radiosContainerDrain = document.getElementsByName('container-drain');
+        const radiosGroundDrain = document.getElementsByName('ground-drain');
+
+        const elTime = document.getElementById('time-scale');
+        const elValTime = document.getElementById('val-time-scale');
         const elGraphDuration = document.getElementById('graph-duration');
-        const elTimeScale = document.getElementById('time-scale');
-        const elChartType = document.getElementById('chart-type');
-        
-        const elValEfficiency = document.getElementById('val-efficiency');
-        const elValGravity = document.getElementById('val-gravity');
-        const elValRadius = document.getElementById('val-radius');
-        const elValGraphFreq = document.getElementById('val-graph-freq');
         const elValGraphDuration = document.getElementById('val-graph-duration');
-        const elValTimeScale = document.getElementById('val-time-scale');
-        
+
         const btnStart = document.getElementById('btn-start');
         const btnStop = document.getElementById('btn-stop');
         const btnResume = document.getElementById('btn-resume');
         const btnReset = document.getElementById('btn-reset');
-        const radioModes = document.getElementsByName('mode');
 
-        // --- Highcharts 設定 ---
-        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        const getChartTheme = (dark) => ({
-            backgroundColor: dark ? '#1c1c1e' : '#ffffff',
-            textColor: dark ? '#f5f5f7' : '#1d1d1f',
-            gridColor: dark ? '#38383a' : '#e0e0e3',
-            lineColorRPM: dark ? '#30d158' : '#34c759', // 緑系
-            lineColorEnergy: dark ? '#ff9f0a' : '#ff9500', // オレンジ系
-            avgColor:   dark ? '#8e8e93' : '#8e8e93'
+        // --- ユーティリティ ---
+        const minRPM = 0.01, maxRPM = 6000;
+        const minLog = Math.log10(minRPM), maxLog = Math.log10(maxRPM);
+        function sliderToRPM(val) { return Math.pow(10, minLog + (maxLog - minLog) * (val / 1000)); }
+        function rpmToSlider(rpm) { if(rpm <= 0) return 0; return Math.max(0, Math.min(1000, ((Math.log10(rpm) - minLog) / (maxLog - minLog)) * 1000)); }
+
+        // --- イベントリスナー ---
+        elRpmSlider.addEventListener('input', e => {
+            const r = sliderToRPM(parseFloat(e.target.value));
+            elRpmInput.value = r < 1 ? r.toFixed(3) : (r < 100 ? r.toFixed(2) : Math.round(r));
+        });
+        elRpmInput.addEventListener('change', e => {
+            let r = parseFloat(e.target.value);
+            if(r < minRPM) r = minRPM; if(r > maxRPM) r = maxRPM;
+            elRpmInput.value = r; elRpmSlider.value = rpmToSlider(r);
         });
 
-        function createChart(id, title, yAxisTitle, colorKey) {
-            const theme = getChartTheme(isDark);
-            const lineColor = theme[colorKey];
+        function updateUI() {
+            let dispMode = 'wheel';
+            for(const r of radiosMode) if(r.checked) dispMode = r.value;
+            
+            if (dispMode === 'water') {
+                divWaterSettings.classList.remove('hidden');
+                divCtrlMaterial.classList.add('hidden'); 
+            } else {
+                divWaterSettings.classList.add('hidden');
+                divCtrlMaterial.classList.remove('hidden');
+            }
 
-            return Highcharts.chart(id, {
-                chart: {
-                    type: 'spline',
-                    backgroundColor: theme.backgroundColor,
-                    marginRight: 10,
-                    marginLeft: 60,
-                    animation: { duration: 300, easing: 'linear' }
-                },
-                title: {
-                    text: title,
-                    style: { color: theme.textColor, fontSize: '14px', fontFamily: 'Roboto' },
-                    align: 'left'
-                },
-                xAxis: {
-                    type: 'linear',
-                    title: { enabled: false },
-                    labels: { style: { color: theme.textColor, fontFamily: 'Roboto' } },
-                    lineColor: theme.gridColor,
-                    tickColor: theme.gridColor
-                },
-                yAxis: {
-                    title: { 
-                        text: yAxisTitle, 
-                        style: { color: theme.textColor, fontFamily: 'Roboto' } 
-                    },
-                    labels: { style: { color: theme.textColor, fontFamily: 'Roboto' } },
-                    gridLineColor: theme.gridColor
-                },
-                legend: { enabled: true, itemStyle: { color: theme.textColor } },
-                exporting: { enabled: false },
-                credits: { enabled: false },
-                plotOptions: {
-                    series: {
-                        marker: { enabled: false },
-                        lineWidth: 2,
-                        animation: false 
-                    }
-                },
-                series: [
-                    { 
-                        name: '値', 
-                        color: lineColor,
-                        data: [] 
-                    },
-                    { 
-                        name: '平均', 
-                        color: theme.avgColor,
-                        dashStyle: 'Dash',
-                        lineWidth: 1.5,
-                        data: []
-                    }
-                ]
-            });
+            let ctrlMode = 'fixed';
+            for(const r of radiosCtrl) if(r.checked) ctrlMode = r.value;
+            divCtrlFixed.classList.toggle('hidden', ctrlMode !== 'fixed');
+            divCtrlScenario.classList.toggle('hidden', ctrlMode !== 'scenario');
+            elScFactorDiv.classList.toggle('hidden', elScType.value !== 'exp');
+            
+            if (chartMain) {
+                if (dispMode === 'water') {
+                    chartMain.setTitle({ text: '流量 (Flow Rate)' });
+                    chartMain.series[0].update({ name: 'Flow' });
+                    chartEnergy.setTitle({ text: '供給エネルギー (Energy)' });
+                } else {
+                    chartMain.setTitle({ text: '回転数 (RPM)' });
+                    chartMain.series[0].update({ name: 'RPM' });
+                    chartEnergy.setTitle({ text: '総エネルギー (Energy)' });
+                }
+            }
         }
 
+        radiosMode.forEach(r => r.addEventListener('change', updateUI));
+        radiosCtrl.forEach(r => r.addEventListener('change', updateUI));
+        elScType.addEventListener('change', updateUI);
+
+        const linkBadge = (el, badge, unit) => el.addEventListener('input', e => badge.textContent = e.target.value + unit);
+        linkBadge(elScDuration, elValScDuration, " s");
+        linkBadge(elScFactor, elValScFactor, "");
+        linkBadge(elTime, elValTime, "x");
+        linkBadge(elGraphDuration, elValGraphDuration, " s");
+
+        // --- Highcharts ---
         function initCharts() {
-            chartRPM = createChart('chart-rpm', '回転数 (RPM)', 'RPM', 'lineColorRPM');
-            chartEnergy = createChart('chart-energy', '総エネルギー (J)', 'Energy (J)', 'lineColorEnergy');
-        }
-
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            const newTheme = getChartTheme(event.matches);
-            [chartRPM, chartEnergy].forEach((chart, idx) => {
-                const color = idx === 0 ? newTheme.lineColorRPM : newTheme.lineColorEnergy;
-                chart.update({
-                    chart: { backgroundColor: newTheme.backgroundColor },
-                    title: { style: { color: newTheme.textColor } },
-                    xAxis: { 
-                        labels: { style: { color: newTheme.textColor } },
-                        lineColor: newTheme.gridColor,
-                        tickColor: newTheme.gridColor
-                    },
-                    yAxis: {
-                        title: { style: { color: newTheme.textColor } },
-                        labels: { style: { color: newTheme.textColor } },
-                        gridLineColor: newTheme.gridColor
-                    },
-                    legend: { itemStyle: { color: newTheme.textColor } },
-                    series: [
-                        { color: color },
-                        { color: newTheme.avgColor }
-                    ]
-                });
-            });
-            draw();
-        });
-
-        // --- 描画と物理 ---
-        function resizeCanvas() {
-            const container = document.getElementById('canvas-container');
-            const rect = container.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            
-            // 画面の高さを10メートル分とする
-            state.ppm = rect.height / 10;
-            state.originX = rect.width / 2 / dpr;
-            state.originY = rect.height / 2 / dpr;
-            
-            draw();
-        }
-
-        function getColors() {
-            const style = getComputedStyle(document.body);
-            return {
-                wheel: style.getPropertyValue('--wheel-color').trim(),
-                text: style.getPropertyValue('--text-color').trim()
+            const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = {
+                bg: isDark ? '#242526' : '#ffffff',
+                text: isDark ? '#e4e6eb' : '#1c1e21',
+                grid: isDark ? '#3e4042' : '#dadde1',
+                lineMain: isDark ? '#30d158' : '#34c759',
+                lineEnergy: '#ff9500'
             };
+            const opts = {
+                chart: { type: 'spline', backgroundColor: theme.bg, animation: false, marginRight: 10, marginLeft: 60 },
+                xAxis: { type: 'linear', labels: { style: { color: theme.text } }, lineColor: theme.grid, tickColor: theme.grid },
+                legend: { enabled: false },
+                credits: { enabled: false },
+                title: { style: { color: theme.text, fontSize: '12px' }, align: 'left' },
+                yAxis: { title: { text: null }, labels: { style: { color: theme.text } }, gridLineColor: theme.grid },
+                plotOptions: { series: { marker: { enabled: false }, lineWidth: 2, animation: false, states: { hover: { enabled: false } } } }
+            };
+
+            chartMain = Highcharts.chart('chart-main', { ...opts, title: { text: '回転数 (RPM)' }, series: [{ color: theme.lineMain, data: [] }] });
+            chartEnergy = Highcharts.chart('chart-energy', { ...opts, title: { text: '総エネルギー (J)' }, series: [{ color: theme.lineEnergy, data: [] }] });
         }
 
-        function getMaterial() {
-            const type = elMaterialSelect.value;
-            return materialDefinitions[type];
+        // --- 物理エンジン ---
+        function getTargetRPM() {
+            let mode = 'fixed';
+            for(const r of radiosCtrl) if(r.checked) mode = r.value;
+
+            if (mode === 'fixed') {
+                return parseFloat(elRpmInput.value);
+            } else {
+                const start = parseFloat(elScStart.value);
+                const end = parseFloat(elScEnd.value);
+                const duration = parseFloat(elScDuration.value);
+                const type = elScType.value;
+                const factor = parseFloat(elScFactor.value);
+
+                const elapsed = state.t - state.scenarioStartTime;
+                if (elapsed < 0) return start;
+                if (elapsed >= duration) return end;
+
+                const t = elapsed / duration; 
+                if (type === 'linear') {
+                    return start + (end - start) * t;
+                } else {
+                    const num = Math.exp(factor * t) - 1;
+                    const den = Math.exp(factor) - 1;
+                    return start + (end - start) * (num / den);
+                }
+            }
         }
 
         function updatePhysics() {
-            const g = parseFloat(elGravity.value);
-            const radius = parseFloat(elRadius.value);
-            const eff = parseFloat(elEfficiency.value) / 100; // 1.0 = 100%
-            const timeScale = parseFloat(elTimeScale.value);
-            const mat = getMaterial();
+            const timeMult = parseFloat(elTime.value);
+            const mat = materialDefinitions[elMatSelect.value];
+            const radiusM = 2.0;
+            const g = 9.8;
 
-            let steps = 1;
-            if (timeScale > 2.0) steps = Math.ceil(timeScale);
-            const dt = (baseTimeStep * timeScale) / steps;
+            // 表示モード取得
+            let dispMode = 'wheel'; for(const r of radiosMode) if(r.checked) dispMode = r.value;
+            let inputType = 'tube'; for(const r of radiosWaterInput) if(r.checked) inputType = r.value;
+            let containerDrainStatus = 'closed'; for(const r of radiosContainerDrain) if(r.checked) containerDrainStatus = r.value;
+            let groundDrainStatus = 'closed'; for(const r of radiosGroundDrain) if(r.checked) groundDrainStatus = r.value;
+            const containerDef = containerDefinitions[elWaterContainer.value];
 
-            for (let s = 0; s < steps; s++) {
-                let totalTorque = 0;
-                let totalInertia = 0;
+            const currentRPM = getTargetRPM();
+            state.omega = currentRPM * (2 * Math.PI) / 60;
 
-                // 各アームと重りの計算
-                for (let i = 0; i < state.armCount; i++) {
-                    // アームの角度
-                    const armAngle = state.angle + (2 * Math.PI * i / state.armCount);
-                    const cos = Math.cos(armAngle);
-                    const sin = Math.sin(armAngle);
+            let steps = Math.ceil(timeMult * 4);
+            if(currentRPM > 1000) steps *= 2;
+            const dt = (baseTimeStep * timeMult) / steps;
 
-                    // 重りの位置シミュレーション (スライド)
-                    // 右側 (cos > 0) にあるときは外側に、左側 (cos < 0) にあるときは内側にスライド
-                    // スライド速度は適当な定数で
-                    let targetDist = (cos > -0.2) ? 1.0 : 0.4; // 右側～底は伸びる、左上は縮む
-                    
-                    // マグネットモードの特別挙動
-                    if(elMaterialSelect.value === 'magnet') {
-                        // 頂点付近で強力に外へ飛び出す
-                        if (sin < -0.8) targetDist = 1.0;
-                    }
-
-                    // 位置の更新 (慣性や摩擦を簡易的に表現して徐々に移動)
-                    const slideSpeed = 2.0 * dt;
-                    if (state.weights[i] < targetDist) state.weights[i] += slideSpeed;
-                    else if (state.weights[i] > targetDist) state.weights[i] -= slideSpeed;
-
-                    const dist = state.weights[i] * radius;
-
-                    // トルク計算: Torque = r * F * sin(theta_force)
-                    // 重力は下向き。接線方向の成分は cos(armAngle)
-                    // Torque = dist * (mass * g) * cos(armAngle)
-                    const mass = 1.0 * mat.massScale;
-                    const torque = dist * (mass * g) * cos;
-                    
-                    totalTorque += torque;
-                    
-                    // 慣性モーメント I = m * r^2
-                    totalInertia += mass * dist * dist;
-                }
-
-                // 基本慣性モーメント（ホイール自体）
-                totalInertia += 5.0 * radius * radius; 
-
-                // 角加速度 alpha = Torque / Inertia
-                const alpha = totalTorque / totalInertia;
-
-                // 速度更新
-                state.omega += alpha * dt;
-
-                // 効率の適用 (摩擦またはエネルギー注入)
-                // 通常の物理では eff < 1.0 (摩擦で減衰)
-                // 永久機関では eff = 1.0 (減衰なし), eff > 1.0 (加速)
-                // 簡単のため、速度に対して乗算で適用
-                // 厳密な物理計算ではないが、シミュレーションの目的（永久機関の演出）に合わせる
-                if (Math.abs(state.omega) > 0) {
-                    // 減衰係数 k を効率から逆算
-                    // eff = 1.0 -> k = 1.0
-                    // eff = 0.9 -> k = 0.999... (1ステップあたり)
-                    const frictionFactor = 1.0 - (1.0 - eff) * 0.05 * timeScale; 
-                    state.omega *= frictionFactor;
-                }
-
-                state.angle += state.omega * dt;
+            for(let s=0; s<steps; s++) {
                 state.t += dt;
+                state.angle += state.omega * dt;
+                
+                // ホイール物理
+                let inertia = 0;
+                let potentialEnergy = 0;
+                for(let i=0; i<state.armCount; i++) {
+                    const theta = state.angle + (2 * Math.PI * i / state.armCount);
+                    const cos = Math.cos(theta);
+                    const sinVal = Math.sin(theta);
+                    const r = state.weights[i] * radiusM;
+                    const force = (r * state.omega * state.omega) + (g * cos);
+                    const slideSpeed = 2.0 * dt;
+                    let targetPos = 0.3;
+                    if (force > 5.0 || (currentRPM < 10 && cos > -0.2)) targetPos = 1.0;
+                    if(state.weights[i] < targetPos) state.weights[i] += slideSpeed;
+                    else if(state.weights[i] > targetPos) state.weights[i] -= slideSpeed;
+                    state.weights[i] = Math.max(0.1, Math.min(1.0, state.weights[i]));
+
+                    const mass = 10.0 * mat.massScale;
+                    inertia += mass * r * r;
+                    potentialEnergy += mass * g * (r * sinVal + radiusM);
+                }
+                inertia += 0.5 * 50.0 * radiusM * radiusM;
+                const kinetic = 0.5 * inertia * state.omega * state.omega;
+                state.totalEnergy = kinetic + potentialEnergy;
+
+                // --- 水シミュレーション ---
+                state.flowRate = Math.abs(currentRPM) * 0.05; 
+                const inputVolume = state.flowRate * dt;
+                state.currentVolume += inputVolume;
+
+                // 容器排水 (Container Drain) -> 地面へ
+                if (containerDrainStatus === 'open') {
+                    const drainRate = state.flowRate * 1.5 + 10.0; 
+                    const drainVolume = drainRate * dt;
+                    if (state.currentVolume > 0) {
+                        const actualDrain = Math.min(state.currentVolume, drainVolume);
+                        state.currentVolume -= actualDrain;
+                        state.floodVolume += actualDrain; // 地面に溜まる
+                    }
+                }
+
+                state.waterLevel = state.currentVolume / containerDef.cap;
+
+                // オーバーフロー -> 地面へ
+                if (containerDrainStatus === 'closed' && state.waterLevel > 1.0) {
+                    const overflowAmount = state.currentVolume - containerDef.cap;
+                    state.floodVolume += overflowAmount; // 地面に溜まる
+                    
+                    state.waterLevel = 1.0;
+                    state.currentVolume = containerDef.cap;
+                    
+                    const spawnChance = Math.min(1.0, state.flowRate / 10);
+                    if (Math.random() < spawnChance) {
+                        const side = Math.random() > 0.5 ? 1 : -1;
+                        state.waterParticles.push({
+                            x: side * (containerDef.width / 2),
+                            y: -containerDef.height,
+                            vx: side * (Math.random() * 2 + 1),
+                            vy: -Math.random() * 2,
+                            life: 1.0
+                        });
+                    }
+                }
+
+                // 地面排水 (Ground Drain)
+                if (groundDrainStatus === 'open' && state.floodVolume > 0) {
+                    // 地面の水が減る (一定量)
+                    const groundDrainRate = 500.0; // L/s
+                    state.floodVolume -= groundDrainRate * dt;
+                    if(state.floodVolume < 0) state.floodVolume = 0;
+                }
+
+                // シャワー演出
+                if (dispMode === 'water' && inputType === 'shower' && state.flowRate > 0.1) {
+                    if(Math.random() < 0.3) {
+                        state.showerParticles.push({
+                            x: (Math.random() - 0.5) * 60,
+                            y: -350, 
+                            vy: 5 + Math.random() * 5,
+                            life: 0.8
+                        });
+                    }
+                }
+
+                // 溢れパーティクル更新
+                for (let i = state.waterParticles.length - 1; i >= 0; i--) {
+                    const p = state.waterParticles[i];
+                    p.vy += 9.8 * dt * 5; 
+                    p.x += p.vx * dt * 10;
+                    p.y += p.vy * dt * 10;
+                    p.life -= dt;
+                    if (p.life <= 0 || p.y > 200) state.waterParticles.splice(i, 1);
+                }
+
+                // シャワーパーティクル更新
+                for (let i = state.showerParticles.length - 1; i >= 0; i--) {
+                    const p = state.showerParticles[i];
+                    p.y += p.vy * dt * 20; 
+                    p.life -= dt;
+                    if (p.life <= 0 || p.y > 0) state.showerParticles.splice(i, 1);
+                }
             }
         }
 
-        function draw() {
-            const width = canvas.width / (window.devicePixelRatio || 1);
-            const height = canvas.height / (window.devicePixelRatio || 1);
-            const colors = getColors();
-            const mat = getMaterial();
-            const radius = parseFloat(elRadius.value) * state.ppm;
+        // --- 描画: 水槽モード ---
+        function drawWaterScene(ctx, width, height) {
+            let inputType = 'tube'; for(const r of radiosWaterInput) if(r.checked) inputType = r.value;
+            let containerDrainStatus = 'closed'; for(const r of radiosContainerDrain) if(r.checked) containerDrainStatus = r.value;
+            let groundDrainStatus = 'closed'; for(const r of radiosGroundDrain) if(r.checked) groundDrainStatus = r.value;
+            
+            const type = elWaterContainer.value;
+            const def = containerDefinitions[type];
+            const level = state.waterLevel;
 
-            ctx.clearRect(0, 0, width, height);
+            const cx = width / 2;
+            const cy = height - 50;
+
+            // --- 浸水描画 (Flood) ---
+            // 浸水量に応じて水位上昇。例えば5000Lで画面半分くらい埋まるように
+            // 係数を調整
+            const floodHeight = state.floodVolume / 15.0; 
+            if (floodHeight > 0) {
+                // 地面排水溝が閉まっているときは青く、開いているときは少し薄くなど表現を変えてもよいが今回は水位のみ
+                const floodY = height - floodHeight;
+                // 地面排水溝の描画
+                if(groundDrainStatus === 'open') {
+                    // 床に穴
+                    ctx.save();
+                    ctx.fillStyle = "#333";
+                    ctx.fillRect(width/2 - 50, height-10, 100, 10);
+                    ctx.restore();
+                }
+
+                ctx.fillStyle = "rgba(0, 80, 180, 0.5)"; 
+                ctx.fillRect(0, floodY, width, floodHeight);
+                
+                // 水面ライン
+                ctx.beginPath();
+                ctx.moveTo(0, floodY);
+                ctx.lineTo(width, floodY);
+                ctx.strokeStyle = "rgba(255,255,255,0.3)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // 浸水量テキスト
+                ctx.fillStyle = "#fff";
+                ctx.font = "14px Roboto";
+                ctx.fillText(`浸水量: ${Math.floor(state.floodVolume).toLocaleString()} L`, 10, floodY - 10);
+            }
 
             ctx.save();
-            ctx.translate(state.originX, state.originY);
+            ctx.translate(cx, cy);
 
-            // ホイールの描画
+            // 注ぎ口 (パイプ)
+            const pipeY = -height + 60;
+            ctx.fillStyle = "#666";
+            ctx.fillRect(-15, -height, 30, 80); 
+            
+            if (inputType === 'tube') {
+                ctx.fillStyle = "#555";
+                ctx.beginPath();
+                ctx.moveTo(-18, pipeY); ctx.lineTo(18, pipeY);
+                ctx.lineTo(15, pipeY+15); ctx.lineTo(-15, pipeY+15);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = "#555";
+                ctx.beginPath();
+                ctx.moveTo(-10, pipeY); ctx.lineTo(10, pipeY);
+                ctx.lineTo(35, pipeY+20); ctx.lineTo(-35, pipeY+20);
+                ctx.fill();
+                ctx.fillStyle = "#333";
+                for(let i=0; i<5; i++) ctx.fillRect(-25 + i*12, pipeY+20, 2, 2);
+            }
+
+            // 容器
             ctx.beginPath();
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = colors.wheel;
-            ctx.lineWidth = 2;
+            ctx.moveTo(-def.width / 2, -def.height);
+            ctx.lineTo(-def.width / 2, 0);
+            ctx.lineTo(def.width / 2, 0);
+            ctx.lineTo(def.width / 2, -def.height);
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = "rgba(180, 180, 180, 0.9)";
             ctx.stroke();
-
-            // 中心軸
-            ctx.beginPath();
-            ctx.arc(0, 0, 8, 0, Math.PI * 2);
-            ctx.fillStyle = colors.wheel;
+            ctx.fillStyle = def.color;
             ctx.fill();
 
-            // アームと重りの描画
-            for (let i = 0; i < state.armCount; i++) {
-                const armAngle = state.angle + (2 * Math.PI * i / state.armCount);
-                const cos = Math.cos(armAngle);
-                const sin = Math.sin(armAngle);
-
-                // アーム線
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(radius * cos, radius * sin);
-                ctx.strokeStyle = "rgba(128,128,128,0.5)";
-                ctx.lineWidth = 1;
-                ctx.stroke();
-
-                // 重り
-                const wDist = state.weights[i] * radius;
-                const wx = wDist * cos;
-                const wy = wDist * sin;
-                const rSize = 10 * mat.massScale + 5; // 質量に応じてサイズ変化
-
-                // 重り本体
-                ctx.beginPath();
-                ctx.arc(wx, wy, rSize, 0, Math.PI * 2);
-                ctx.fillStyle = mat.color;
-                ctx.fill();
+            // 中身の水
+            if (level > 0) {
+                const waterH = def.height * level;
+                ctx.fillStyle = "rgba(0, 150, 255, 0.6)";
+                ctx.fillRect(-def.width/2 + 2, -waterH, def.width - 4, waterH);
                 
-                // ハイライト
+                // 水面ライン
                 ctx.beginPath();
-                ctx.arc(wx - rSize*0.3, wy - rSize*0.3, rSize/3, 0, Math.PI * 2);
-                ctx.fillStyle = "rgba(255,255,255,0.4)";
+                ctx.moveTo(-def.width/2 + 2, -waterH);
+                ctx.lineTo(def.width/2 - 2, -waterH);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+                ctx.stroke();
+            }
+
+            // 水量テキスト表示
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 16px Roboto";
+            ctx.textAlign = "center";
+            ctx.shadowColor="rgba(0,0,0,0.5)"; ctx.shadowBlur=4;
+            
+            const percent = (state.waterLevel * 100).toFixed(1);
+            const curL = Math.floor(state.currentVolume).toLocaleString();
+            const maxL = def.cap.toLocaleString();
+            
+            const textY = -def.height / 2;
+            ctx.fillText(`${percent} %`, 0, textY - 10);
+            ctx.font = "14px Roboto";
+            ctx.fillText(`${curL} / ${maxL} L`, 0, textY + 15);
+            
+            ctx.shadowBlur=0; 
+
+            // 容器排水バルブ
+            if (containerDrainStatus === 'open') {
+                ctx.fillStyle = "#444";
+                ctx.fillRect(10, 0, 20, 15);
+                if (state.currentVolume > 0) {
+                    ctx.fillStyle = "rgba(0, 150, 255, 0.6)";
+                    const drainW = Math.min(15, Math.max(2, state.flowRate + 2));
+                    ctx.fillRect(10 + 10 - drainW/2, 15, drainW, 40);
+                }
+            }
+
+            // 注水描画
+            if (state.flowRate > 0) {
+                const startY = pipeY + (inputType === 'tube' ? 15 : 20);
+                const endY = -def.height * level;
+
+                if (inputType === 'tube') {
+                    const w = Math.min(def.width * 0.5, Math.max(4, state.flowRate * 2));
+                    ctx.fillStyle = "rgba(0, 150, 255, 0.4)";
+                    ctx.fillRect(-w/2, startY, w, Math.abs(startY - endY));
+                    ctx.fillStyle = "rgba(200, 220, 255, 0.3)";
+                    ctx.fillRect(-w/4, startY, w/2, Math.abs(startY - endY));
+                    ctx.beginPath();
+                    ctx.ellipse(0, endY, w, w/3, 0, 0, Math.PI*2);
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+                    ctx.fill();
+                } else {
+                    ctx.strokeStyle = "rgba(0, 180, 255, 0.5)";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (const p of state.showerParticles) {
+                        ctx.moveTo(p.x, p.y + startY + 300);
+                        ctx.lineTo(p.x, p.y + startY + 300 + 15);
+                    }
+                    ctx.stroke();
+                }
+            }
+
+            // 溢れパーティクル
+            ctx.fillStyle = "rgba(0, 150, 255, 0.8)";
+            for (const p of state.waterParticles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
                 ctx.fill();
+            }
+
+            // ラベル
+            ctx.fillStyle = "#888";
+            ctx.font = "12px Roboto";
+            ctx.textAlign = "center";
+            ctx.fillText(def.name, 0, 20);
+            if(containerDrainStatus === 'open') {
+                ctx.fillStyle = "var(--warn-color)";
+                ctx.fillText("DRAIN OPEN", 0, 40);
             }
 
             ctx.restore();
-
-            // テキスト情報
-            ctx.fillStyle = colors.text;
-            ctx.font = "14px Roboto";
-            const rpm = (state.omega * 60 / (2 * Math.PI)).toFixed(1);
-            ctx.fillText(`回転数: ${rpm} RPM`, 10, 25);
-            ctx.fillText(`角速度: ${state.omega.toFixed(2)} rad/s`, 10, 45);
-            ctx.fillText(`時間: ${state.t.toFixed(2)} s`, 10, 65);
         }
 
-        // --- メインループ ---
-        function loop() {
-            if (!state.running) return;
-            if (state.paused) return;
+        // --- 描画: ホイールモード ---
+        function drawWheelScene(ctx, width, height) {
+            const mat = materialDefinitions[elMatSelect.value];
+            
+            ctx.save();
+            const cx = width / 2;
+            const cy = height / 2;
+            ctx.translate(cx, cy);
+            
+            const scale = Math.min(width, height) * 0.35;
 
+            ctx.beginPath();
+            ctx.arc(0, 0, scale, 0, Math.PI*2);
+            ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--wheel-color').trim();
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            
+            for(let i=0; i<state.armCount; i++) {
+                const theta = state.angle + (2 * Math.PI * i / state.armCount);
+                const r = state.weights[i] * scale;
+                
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(scale * Math.cos(theta), scale * Math.sin(theta));
+                ctx.strokeStyle = "rgba(150,150,150,0.3)";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                const size = 10 * mat.massScale + 5;
+                const x = r * Math.cos(theta);
+                const y = r * Math.sin(theta);
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI*2);
+                ctx.fillStyle = mat.color;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(x - size*0.3, y - size*0.3, size*0.3, 0, Math.PI*2);
+                ctx.fillStyle = "rgba(255,255,255,0.4)";
+                ctx.fill();
+            }
+            ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fillStyle="#444"; ctx.fill();
+            
+            ctx.restore();
+        }
+
+        function formatFlowRate(lps) {
+            if (lps < 1.0) return (lps * 1000).toFixed(0) + " mL/s";
+            if (lps >= 1000) return (lps / 1000).toFixed(2) + " kL/s";
+            return lps.toFixed(2) + " L/s";
+        }
+
+        function drawInfo() {
+            const boxW = 240, boxH = 150;
+            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.roundRect(10, 10, boxW, boxH, 10);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.textAlign = "left"; ctx.textBaseline = "middle";
+            ctx.font = "14px Roboto"; ctx.fillStyle = "#aaa";
+            
+            let y = 35;
+            ctx.fillText("経過時間:", 25, y);
+            ctx.fillStyle = "#fff"; ctx.font = "bold 16px Roboto";
+            ctx.fillText(state.t.toFixed(1) + " s", 120, y);
+            
+            y += 30;
+            let dispMode = 'wheel'; for(const r of radiosMode) if(r.checked) dispMode = r.value;
+            const rpm = Math.abs(state.omega * 60 / (2 * Math.PI));
+
+            if (dispMode === 'water') {
+                ctx.fillStyle = "#aaa"; ctx.font = "14px Roboto";
+                ctx.fillText("流量:", 25, y);
+                ctx.fillStyle = "#007aff"; ctx.font = "bold 18px Roboto";
+                ctx.fillText(formatFlowRate(state.flowRate), 120, y);
+            } else {
+                ctx.fillStyle = "#aaa"; ctx.font = "14px Roboto";
+                ctx.fillText("回転数:", 25, y);
+                ctx.fillStyle = "#007aff"; ctx.font = "bold 18px Roboto";
+                let rpmStr = rpm > 1000 ? Math.round(rpm).toLocaleString() : rpm.toFixed(1);
+                ctx.fillText(rpmStr + " RPM", 120, y);
+            }
+
+            y += 30;
+            ctx.fillStyle = "#aaa"; ctx.font = "14px Roboto";
+            ctx.fillText("エネルギー:", 25, y);
+            ctx.fillStyle = "#ff9500"; ctx.font = "bold 18px Roboto";
+            let en = state.totalEnergy;
+            let enStr = en > 1e9 ? (en/1e9).toFixed(2)+" GJ" : (en > 1e6 ? (en/1e6).toFixed(2)+" MJ" : Math.floor(en).toLocaleString()+" J");
+            ctx.fillText(enStr, 120, y);
+
+            y += 30;
+            ctx.fillStyle = "#aaa"; ctx.font = "bold 12px Roboto";
+            let statusStr = "固定出力";
+            let m = 'fixed'; for(const r of radiosCtrl) if(r.checked) m = r.value;
+            if(m === 'scenario') { statusStr = "シナリオ加速中"; ctx.fillStyle = "#34c759"; }
+            ctx.fillText(statusStr, 25, y);
+        }
+
+        function draw() {
+            const dpr = window.devicePixelRatio || 1;
+            const width = canvas.width / dpr;
+            const height = canvas.height / dpr;
+            
+            ctx.clearRect(0, 0, width, height);
+
+            let dispMode = 'wheel'; for(const r of radiosMode) if(r.checked) dispMode = r.value;
+
+            if (dispMode === 'water') {
+                drawWaterScene(ctx, width, height);
+            } else {
+                drawWheelScene(ctx, width, height);
+            }
+            drawInfo();
+        }
+
+        function loop() {
+            if(!state.running || state.paused) return;
             updatePhysics();
             draw();
 
-            // グラフ更新
-            const freq = parseFloat(elGraphFreq.value);
-            const maxDuration = parseFloat(elGraphDuration.value);
-
-            if (state.t - state.lastGraphUpdate >= freq) {
-                const rpm = Math.abs(state.omega * 60 / (2 * Math.PI));
-                // 簡易的なエネルギー計算 E = 1/2 I w^2 (イナーシャは適当な定数で近似)
-                const energy = 0.5 * 10.0 * state.omega * state.omega;
-
-                // 平均計算
-                state.sumRPM += rpm;
-                state.countRPM++;
-                state.sumEnergy += energy;
-                state.countEnergy++;
-
-                const avgRPM = state.sumRPM / state.countRPM;
-                const avgEnergy = state.sumEnergy / state.countEnergy;
-
-                // シフト判定
-                const seriesR = chartRPM.series[0];
-                const shouldShift = seriesR.data.length > 0 && 
-                                    (state.t - seriesR.data[0].x) > maxDuration;
-
-                chartRPM.series[0].addPoint([state.t, rpm], true, shouldShift);
-                chartRPM.series[1].addPoint([state.t, avgRPM], true, shouldShift);
-
-                chartEnergy.series[0].addPoint([state.t, energy], true, shouldShift);
-                chartEnergy.series[1].addPoint([state.t, avgEnergy], true, shouldShift);
-
-                if (shouldShift || state.t > maxDuration) {
-                    const min = state.t - maxDuration;
-                    const max = state.t;
-                    chartRPM.xAxis[0].setExtremes(min, max);
-                    chartEnergy.xAxis[0].setExtremes(min, max);
-                }
+            const freq = 0.1; 
+            const duration = parseFloat(elGraphDuration.value);
+            if(state.t - state.lastGraphUpdate > freq) {
+                let dispMode = 'wheel'; for(const r of radiosMode) if(r.checked) dispMode = r.value;
                 
+                let mainVal;
+                if (dispMode === 'water') {
+                    mainVal = state.flowRate; // L/s
+                } else {
+                    mainVal = Math.abs(state.omega * 60 / (2 * Math.PI)); // RPM
+                }
+
+                const shift = chartMain.series[0].data.length > 0 && (state.t - chartMain.series[0].data[0].x > duration);
+                chartMain.series[0].addPoint([state.t, mainVal], true, shift);
+                chartEnergy.series[0].addPoint([state.t, state.totalEnergy], true, shift);
                 state.lastGraphUpdate = state.t;
             }
-
             animationId = requestAnimationFrame(loop);
         }
 
-        // --- UI操作 ---
-        function updateMaterialType() {
-            const type = elMaterialSelect.value;
-            const def = materialDefinitions[type];
-            elMaterialDesc.textContent = def.desc;
-            draw();
-        }
-
-        function updateButtonState() {
-            if (state.running && !state.paused) {
-                btnStart.disabled = true;
-                btnStop.disabled = false;
-                btnResume.disabled = true;
-                elMaterialSelect.disabled = true; 
-            } else if (state.running && state.paused) {
-                btnStart.disabled = true;
-                btnStop.disabled = true;
-                btnResume.disabled = false;
-                elMaterialSelect.disabled = true;
-            } else {
-                btnStart.disabled = false;
-                btnStop.disabled = true;
-                btnResume.disabled = true;
-                elMaterialSelect.disabled = false;
-            }
-        }
-
-        function updateChartType() {
-            const type = elChartType.value;
-            chartRPM.update({ chart: { type: type } });
-            chartEnergy.update({ chart: { type: type } });
-        }
-
-        function startSimulation() {
-            if (state.running && !state.paused) return;
-
-            let mode = 'still';
-            for(const radio of radioModes) {
-                if(radio.checked) mode = radio.value;
-            }
-
-            state.t = 0;
-            state.lastGraphUpdate = 0;
-            state.angle = 0;
-            
-            // 重りの初期位置リセット (ランダム性を持たせるか、固定か)
-            state.weights = new Array(state.armCount).fill(0.5);
-
-            if (mode === 'still') {
-                state.omega = 0;
-                // 静止からでも動き出すように、初期状態を少しアンバランスにする
-                state.weights[0] = 1.0; 
-            } else {
-                state.omega = 3.0; // 初期回転を与える
-            }
-
-            state.running = true;
-            state.paused = false;
-
-            state.sumRPM = 0;
-            state.countRPM = 0;
-            state.sumEnergy = 0;
-            state.countEnergy = 0;
-
-            chartRPM.series[0].setData([]);
-            chartRPM.series[1].setData([]);
-            chartEnergy.series[0].setData([]);
-            chartEnergy.series[1].setData([]);
-            chartRPM.xAxis[0].setExtremes(null, null);
-            chartEnergy.xAxis[0].setExtremes(null, null);
-
-            radioModes.forEach(r => r.disabled = true);
-            updateButtonState();
-            loop();
-        }
-
-        function stopSimulation() {
-            if (!state.running) return;
-            state.paused = true;
-            cancelAnimationFrame(animationId);
-            updateButtonState();
-        }
-
-        function resumeSimulation() {
-            if (!state.running || !state.paused) return;
-            state.paused = false;
-            updateButtonState();
-            loop();
-        }
-
-        function resetSimulation() {
-            state.running = false;
-            state.paused = false;
-            cancelAnimationFrame(animationId);
-            
-            state.t = 0;
-            state.omega = 0;
-            state.angle = 0;
-            state.weights = new Array(state.armCount).fill(0.5);
-            
-            state.sumRPM = 0;
-            state.countRPM = 0;
-            state.sumEnergy = 0;
-            state.countEnergy = 0;
-
-            chartRPM.series[0].setData([]);
-            chartRPM.series[1].setData([]);
-            chartEnergy.series[0].setData([]);
-            chartEnergy.series[1].setData([]);
-            
-            updateMaterialType();
-            
-            radioModes.forEach(r => r.disabled = false);
-            updateButtonState();
-            draw();
-        }
-
-        // --- イベントリスナー ---
-        btnStart.addEventListener('click', startSimulation);
-        btnStop.addEventListener('click', stopSimulation);
-        btnResume.addEventListener('click', resumeSimulation);
-        btnReset.addEventListener('click', resetSimulation);
-
-        elMaterialSelect.addEventListener('change', updateMaterialType);
-        elChartType.addEventListener('change', updateChartType);
-
-        elEfficiency.addEventListener('input', (e) => elValEfficiency.textContent = e.target.value);
-        elGravity.addEventListener('input', (e) => elValGravity.textContent = e.target.value);
-        elRadius.addEventListener('input', (e) => {
-            elValRadius.textContent = e.target.value;
+        function resize() {
+            const rect = document.getElementById('canvas-container').getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
             if(!state.running) draw();
-        });
-        elGraphFreq.addEventListener('input', (e) => elValGraphFreq.textContent = e.target.value);
-        elGraphDuration.addEventListener('input', (e) => elValGraphDuration.textContent = e.target.value);
-        elTimeScale.addEventListener('input', (e) => elValTimeScale.textContent = e.target.value);
+        }
+        window.addEventListener('resize', resize);
 
-        window.addEventListener('resize', resizeCanvas);
+        btnStart.onclick = () => {
+            state.running = true; state.paused = false; state.t = 0; state.angle = 0;
+            state.scenarioStartTime = 0; state.totalEnergy = 0; state.lastGraphUpdate = 0;
+            state.waterLevel = 0; state.currentVolume = 0; state.waterParticles = []; state.showerParticles = [];
+            state.floodVolume = 0;
+            state.weights = new Array(state.armCount).fill(0.5);
+            chartMain.series[0].setData([]); chartEnergy.series[0].setData([]);
+            btnStart.disabled = true; btnStop.disabled = false; btnResume.disabled = true;
+            elMatSelect.disabled = true; 
+            loop();
+        };
 
-        // --- 初期化 ---
-        initCharts();
-        resizeCanvas();
-        updateMaterialType();
-        resetSimulation();
+        btnStop.onclick = () => { state.paused = true; cancelAnimationFrame(animationId); btnStop.disabled = true; btnResume.disabled = false; };
+        btnResume.onclick = () => { state.paused = false; btnStop.disabled = false; btnResume.disabled = true; loop(); };
+        btnReset.onclick = () => {
+            state.running = false; state.paused = false; cancelAnimationFrame(animationId);
+            state.t = 0; state.omega = 0; state.angle = 0; state.weights.fill(0.5);
+            state.waterLevel = 0; state.waterParticles = []; state.showerParticles = []; state.floodVolume = 0;
+            chartMain.series[0].setData([]); chartEnergy.series[0].setData([]);
+            btnStart.disabled = false; btnStop.disabled = true; btnResume.disabled = true;
+            elMatSelect.disabled = false;
+            draw();
+        };
+
+        initCharts(); updateUI(); resize();
+        elRpmSlider.dispatchEvent(new Event('input'));
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { initCharts(); draw(); });
 
     </script>
 </body>
